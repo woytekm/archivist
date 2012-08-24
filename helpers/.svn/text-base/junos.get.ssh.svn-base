@@ -1,0 +1,87 @@
+#
+# Archivist internal expect script
+#
+# junos.get.ssh - method for getting configuration by SSH from Juniper JUNOS device
+#
+
+set timeout 15
+
+log_user 1
+spawn ssh -l [lindex $argv 1] [lindex $argv 0]
+
+expect "ssword:"
+send "[lindex $argv 2]\r"
+
+expect {
+   "%"
+    {
+     send "cli\r"
+
+     expect {
+      ">"
+       {
+        send "\r"
+       }
+     timeout
+       {
+        exit
+       }
+      }
+
+    }
+ 
+   ">"
+    {
+     send "\r"
+    }
+
+   timeout
+    {
+     exit
+    }
+  }
+
+expect ">"
+send "set cli screen-length 0\r"
+
+expect ">"
+
+#check if we are _really_ logged in:
+
+send "show version\r"
+
+expect {
+          timeout
+           {
+            exit
+           }
+
+         "JUNOS"
+           {
+            expect ">"
+           }
+
+       }
+
+log_file -a -noappend [lindex $argv 0].new
+set timeout 30
+send "show configuration\r"
+expect -re {[\w\-_!$%&*()+=|:;"'@{}<>\/?.\[\]]+>\s$}
+log_file
+send "exit\r"
+
+expect {
+
+  "%"
+   {
+    send "exit\r"
+    expect "host."
+   }
+  
+  "host."
+   {
+    exit
+   }
+
+ }
+

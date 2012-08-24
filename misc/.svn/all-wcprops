@@ -1,0 +1,35 @@
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svnroot/archivistndca/!svn/ver/111/archivist/misc
+END
+archivist.conf
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svnroot/archivistndca/!svn/ver/111/archivist/misc/archivist.conf
+END
+mysql_schema.sql
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svnroot/archivistndca/!svn/ver/66/archivist/misc/mysql_schema.sql
+END
+router.db.sample
+K 25
+svn:wc:ra_dav:version-url
+V 66
+/svnroot/archivistndca/!svn/ver/47/archivist/misc/router.db.sample
+END
+Makefile.am
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svnroot/archivistndca/!svn/ver/47/archivist/misc/Makefile.am
+END
+threadsafety.sh
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svnroot/archivistndca/!svn/ver/98/archivist/misc/threadsafety.sh
+END

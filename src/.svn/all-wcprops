@@ -1,0 +1,101 @@
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svnroot/archivistndca/!svn/ver/113/archivist/src
+END
+auth.c
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svnroot/archivistndca/!svn/ver/96/archivist/src/auth.c
+END
+get_methods.c
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svnroot/archivistndca/!svn/ver/110/archivist/src/get_methods.c
+END
+mysql.c
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svnroot/archivistndca/!svn/ver/96/archivist/src/mysql.c
+END
+config.c
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svnroot/archivistndca/!svn/ver/112/archivist/src/config.c
+END
+svn.c
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svnroot/archivistndca/!svn/ver/110/archivist/src/svn.c
+END
+snmp.c
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svnroot/archivistndca/!svn/ver/110/archivist/src/snmp.c
+END
+arch.c
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svnroot/archivistndca/!svn/ver/111/archivist/src/arch.c
+END
+scheduler.c
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svnroot/archivistndca/!svn/ver/111/archivist/src/scheduler.c
+END
+syslog.c
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svnroot/archivistndca/!svn/ver/110/archivist/src/syslog.c
+END
+scheduler.h
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svnroot/archivistndca/!svn/ver/96/archivist/src/scheduler.h
+END
+main.c
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svnroot/archivistndca/!svn/ver/112/archivist/src/main.c
+END
+defs.h
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svnroot/archivistndca/!svn/ver/110/archivist/src/defs.h
+END
+archivist_config.h
+K 25
+svn:wc:ra_dav:version-url
+V 68
+/svnroot/archivistndca/!svn/ver/110/archivist/src/archivist_config.h
+END
+Makefile.am
+K 25
+svn:wc:ra_dav:version-url
+V 60
+/svnroot/archivistndca/!svn/ver/47/archivist/src/Makefile.am
+END
+taillog.c
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svnroot/archivistndca/!svn/ver/92/archivist/src/taillog.c
+END
+misc.c
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svnroot/archivistndca/!svn/ver/113/archivist/src/misc.c
+END

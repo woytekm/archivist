@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 45
+/svnroot/archivistndca/!svn/ver/113/archivist
+END
+GPL.txt
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svnroot/archivistndca/!svn/ver/47/archivist/GPL.txt
+END
+configure.ac
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svnroot/archivistndca/!svn/ver/111/archivist/configure.ac
+END
+TODO
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svnroot/archivistndca/!svn/ver/97/archivist/TODO
+END
+version
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svnroot/archivistndca/!svn/ver/97/archivist/version
+END
+Makefile.am
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svnroot/archivistndca/!svn/ver/47/archivist/Makefile.am
+END
+README
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svnroot/archivistndca/!svn/ver/70/archivist/README
+END
+version.sh
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svnroot/archivistndca/!svn/ver/67/archivist/version.sh
+END
