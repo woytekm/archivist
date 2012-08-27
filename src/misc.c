@@ -953,7 +953,7 @@ void a_dump_memstats_solaris(void)
 */
 {
 
- char proc_path[100];
+ char proc_path[MAXPATH];
  int fd;
  prpsinfo_t ps_info;
 
@@ -978,7 +978,7 @@ void a_dump_memstats_linux(void)
 */
 {
 
- char proc_path[30];
+ char proc_path[MAXPATH];
 
  snprintf(proc_path, 30, "/proc/self/statm");
 

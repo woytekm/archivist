@@ -207,7 +207,7 @@ main
 
    /* main program: */
 
-   while(1)
+   while(TRUE)
     {
      if(G_config_info.listen_syslog)
       if(a_check_syslog_stream(syslog_socket,syslog_msgbuffer,ip_from))

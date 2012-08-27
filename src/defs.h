@@ -65,6 +65,10 @@
 #define MAXPATH 4096
 #endif
 
+#ifndef TRUE
+#define TRUE 1
+#endif
+
 #define MAXQUERY 2048           /* maximum length of SQL query */
 #define SAFE_STRING_LEN 8192
 
