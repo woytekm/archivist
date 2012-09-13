@@ -1,4 +1,4 @@
-#!/usr/bin/python
+# Archivist - network device config archiver
 #
 # this is a script for post-processing downloaded cisco IOS config file
 # in short - load, filter as you wish, and save to the same filename
@@ -50,3 +50,4 @@ for line in in_lines:
  
 outfile.close()
 
+# end
