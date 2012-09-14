@@ -86,7 +86,7 @@ int a_get_using_snmp
 
     pthread_mutex_lock (&G_perl_running_mutex);
 
-    if(a_cleanup_config_file(result_file,device_type) == -1) /* re-format output config file */
+    if(a_cleanup_config_file_p(result_file,device_type) == -1) /* re-format output config file */
      {
       pthread_mutex_unlock(&G_perl_running_mutex);
       a_logmsg("%s: SNMP method: post-processing config file failed.",device_name);

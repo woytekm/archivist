@@ -1,3 +1,5 @@
+sinclude(m4/ac_python_devel.m4)
+
 AC_INIT([archivist], m4_esyscmd([./version.sh | tr -d '\n']), [woytekm@gmail.com])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 AC_PROG_CC
@@ -15,17 +17,6 @@ if test "$enable_mysql" = "yes"
 if test "$enable_debug" = "yes"
  then
    CFLAGS="$CFLAGS -g"
- fi
-
-printf "checking for Perl C development headers location... "
-
-PERL_ARCHLIB=`perl -MConfig -e 'print $Config{archlib}'`
-PERL_CORE=$PERL_ARCHLIB/CORE
-
-if test x"$PERL_ARCHLIB" = x; then
-  printf "failed.\n"
- else
-  printf "$PERL_CORE\n"
  fi
 
 # following APR, APR-util checks were copied from DBSlayer's configure.ac. 
@@ -100,14 +91,16 @@ CPPFLAGS="$CPPFLAGS -I$PERL_CORE -I/usr/include/subversion-1 -I/usr/local/includ
 
 CFLAGS="$CFLAGS $APR_CFLAGS"
 
+AC_PYTHON_DEVEL
+
+CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
+LDFLAGS="$LDFLAGS $PYTHON_LDFLAGS"
+
 AC_CHECK_HEADERS([sys/procfs.h],[],[])
 AC_CHECK_HEADERS([sys/time.h])
 AC_CHECK_HEADERS([stdarg.h],[],[])
 
-AC_CHECK_HEADER([EXTERN.h],[],[echo "Cannot find EXTERN.h header file (part of perl headers).";exit -1])
 AC_CHECK_HEADER([regex.h],[],[echo "Cannot find regex.h header file (GNU regex).";exit -1])
-
-AC_CHECK_LIB([perl],[main],[],[echo "Error! No libperl-dev found!";exit -1;])
 
 AC_CHECK_LIB([nsl],[gethostbyname],[],[])
 

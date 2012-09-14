@@ -24,8 +24,7 @@
 #include<unistd.h>
 #include<stdlib.h>
 
-#include<EXTERN.h>
-#include<perl.h>
+#include "Python.h"
 
 #include "defs.h"
 #include "archivist_config.h"
@@ -92,99 +91,20 @@ int a_get_using_rancid
  
 }
 
-
-int a_cleanup_config_file
+int a_cleanup_config_file_p
 (char *filename,char *device_type)
 /*
-* cleanup device config file downloaded using expect method. 
-* the file is processed by perl script interpreted by a perl
-* instance created in this program.
-* this method is a little faster and cleaner than system()'ing perl 
-* to re-format file, and finally it allows for easy customization 
-* (scripts for user-defined platforms).
+*
+* cleanup device config file downloaded using expect method.
+* (python version)
+*
 */
 {
 
-   static PerlInterpreter *my_perl;
-   struct stat perl_script_stat;
-   char *argval[3];
-   int perl_res,argcount=3;
 
-   a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: args: %s, %s",filename,device_type);
-   
-   argval[0] = malloc(5);
-   argval[1] = malloc(strlen(device_type) + strlen(G_config_info.script_dir) + 20);
-   argval[2] = malloc(strlen(filename) + 3);
-
-   /* build up argument list for perl interpreter: */
-
-   strcpy(argval[0]," "); 
-   strcpy(argval[1],G_config_info.script_dir);
-   strcat(argval[1],"/");
-   strcat(argval[1],device_type);
-   strcat(argval[1],".process"); /* <platform>.process - post-processing perl script name */
-   strcpy(argval[2],filename);
-
-   if(stat(argval[1],&perl_script_stat))
-    {
-     a_logmsg("cannot open %s helper script!",argval[1]); 
-     return 1;
-    } /* config post-processing is optional, so return 1 here */
-
-   if(perl_script_stat.st_size == 0)
-    {
-     a_logmsg("%s helper script has zero size!",argval[1]);
-     return 1;
-    } /* config post-processing is optional, so return 1 here */
-   
-   if((my_perl = perl_alloc()) == NULL) 
-    {
-     a_logmsg("%s: cleanup_config_file: failed to create perl interpreter.",filename);
-     return -1;
-    } /* prepare and exec perl interpreter */
-
-   PL_perl_destruct_level = 1; 
-
-   perl_construct(my_perl);
-
-   PL_exit_flags |= PERL_EXIT_DESTRUCT_END;
-
-   perl_res = perl_parse(my_perl, NULL, argcount, argval, (char **)NULL);
-
-   if(perl_res)
-    {
-     a_logmsg("%s: cleanup_config_file: failed to parse post-processing perl script!",filename);
-     PL_perl_destruct_level = 1;
-     perl_destruct(my_perl);
-     perl_free(my_perl);
-     return -1;
-    }
-
-   if(perl_run(my_perl))
-    {
-     a_logmsg("%s: cleanup_config_file: failed to execute post-processing perl script!",filename);
-     PL_perl_destruct_level = 1;
-     perl_destruct(my_perl);
-     perl_free(my_perl);
-     return -1;
-    }
-
-   PL_perl_destruct_level = 1; 
-
-   perl_destruct(my_perl);
-
-   perl_free(my_perl);
-
-   a_refresh_signals(); /* perl parser tends to mask previous signal hookups */
-
-   free(argval[0]);
-   free(argval[1]);
-   free(argval[2]);
-
-   return 1;
+ return 1;
 
 }
-
 
 int a_get_using_expect
 (char *device_name, char *device_type, char *auth_set, char *arch_method)
@@ -264,7 +184,7 @@ int a_get_using_expect
     a_debug_info2(DEBUGLVL5,"a_get_using_expect: re-formatting device config file.");
     pthread_mutex_lock(&G_perl_running_mutex);
 
-    if(a_cleanup_config_file(result_file,device_type) == -1) /* re-format output config file */
+    if(a_cleanup_config_file_p(result_file,device_type) == -1) /* re-format output config file */
      {
       pthread_mutex_unlock(&G_perl_running_mutex);
       a_logmsg("%s: expect method: post-processing config file failed.",device_name);
