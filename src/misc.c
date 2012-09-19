@@ -300,6 +300,8 @@ void a_cleanup_and_exit
    apr_pool_destroy(G_apr_root_pool);
    svn_pool_destroy(G_svn_root_pool);
 
+   PyEval_RestoreThread(G_py_main_thread_state);
+
    Py_Exit(0);
 
    exit(0);
@@ -554,7 +556,7 @@ void a_init_globals
 
    pthread_mutex_init(&G_thread_count_mutex, NULL);
    pthread_mutex_init(&G_M_thread_count_mutex, NULL);
-   pthread_mutex_init(&G_perl_running_mutex, NULL);
+   pthread_mutex_init(&G_embedded_running_mutex, NULL);
    pthread_mutex_init(&G_changelog_write_mutex, NULL);
    pthread_mutex_init(&G_SQL_query_mutex, NULL);
  
@@ -583,6 +585,9 @@ void a_init_globals
 
    Py_Initialize();
    PyEval_InitThreads();
+
+   G_py_main_thread_state = PyThreadState_Get();
+
    PyEval_ReleaseLock();
 
 }

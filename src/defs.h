@@ -86,7 +86,7 @@
 pthread_mutex_t G_thread_count_mutex;
 pthread_mutex_t G_M_thread_count_mutex;
 pthread_mutex_t G_router_db_mutex;
-pthread_mutex_t G_perl_running_mutex;
+pthread_mutex_t G_embedded_running_mutex;
 pthread_mutex_t G_changelog_write_mutex;
 pthread_mutex_t G_SQL_query_mutex;
 
@@ -108,6 +108,8 @@ int G_mainloop_dly;
 
 apr_pool_t *G_svn_root_pool;
 apr_pool_t *G_apr_root_pool;
+
+PyThreadState *G_py_main_thread_state;
 
 #ifdef USE_MYSQL
 

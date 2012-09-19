@@ -84,17 +84,17 @@ int a_get_using_snmp
    {
     a_debug_info2(DEBUGLVL5,"a_get_using_snmp: re-formatting device config file.");
 
-    pthread_mutex_lock (&G_perl_running_mutex);
+    pthread_mutex_lock (&G_embedded_running_mutex); 
 
     if(a_cleanup_config_file(result_file,device_type) == -1) /* re-format output config file */
      {
-      pthread_mutex_unlock(&G_perl_running_mutex);
+      pthread_mutex_unlock(&G_embedded_running_mutex);
       a_logmsg("%s: SNMP method: post-processing config file failed.",device_name);
       remove(result_file);
       return -1;
      }
 
-    pthread_mutex_unlock(&G_perl_running_mutex);
+    pthread_mutex_unlock(&G_embedded_running_mutex);
 
    }
 
