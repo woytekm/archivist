@@ -23,6 +23,7 @@
 #include<stdio.h>
 #include<unistd.h>
 #include<stdlib.h>
+#include<fcntl.h>
 
 #include "Python.h"
 
@@ -72,9 +73,9 @@ int a_get_using_rancid
 
    remove(rancid_hostname); /* try to remove the file */
 
-   a_debug_info2(DEBUGLVL5,"a_pull_from_device: executing rancid %s %s ...",device_name,device_type);
+   a_debug_info2(DEBUGLVL5,"a_get_using_rancid: executing rancid %s %s ...",device_name,device_type);
    a_our_system(rancid_command);
-   a_debug_info2(DEBUGLVL5,"a_pull_from_device: rancid finished...");
+   a_debug_info2(DEBUGLVL5,"a_get_using_rancid: rancid finished...");
 
    if(stat(rancid_hostname,&outfile) == -1)
     {
@@ -91,8 +92,8 @@ int a_get_using_rancid
  
 }
 
-int a_cleanup_config_file_p
-(char *filename,char *device_type)
+int a_cleanup_config_file
+(char *filename,char *platform_type)
 /*
 *
 * cleanup device config file downloaded using expect method.
@@ -101,6 +102,38 @@ int a_cleanup_config_file_p
 */
 {
 
+ PyGILState_STATE gstate;
+
+ int py_argc;
+ char * py_argv[3];
+ FILE *script_file;
+
+ py_argc = 2;
+ py_argv[0] = malloc(strlen(platform_type) + strlen(G_config_info.script_dir) + 20);
+ py_argv[1] = malloc(strlen(filename) + 3);
+
+ strcpy(py_argv[0],G_config_info.script_dir);
+ strcat(py_argv[0],"/");
+ strcat(py_argv[0],platform_type);
+ strcat(py_argv[0],".process.py");
+
+ strcpy(py_argv[1],filename);
+
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: python script to be interpreted: %s",py_argv[0]); 
+ 
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: acquiring GIL lock..."); 
+ gstate = PyGILState_Ensure();
+
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: GIL lock acquired. running script...");
+
+ PySys_SetArgv(py_argc, py_argv);
+ PyObject* PyFileObject = PyFile_FromString(py_argv[0], "r");
+ PyRun_SimpleFile(PyFile_AsFile(PyFileObject), py_argv[0]);
+
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: script executed. GIL lock release and exit.");
+ PyGILState_Release(gstate);
+
+ a_refresh_signals(); /* refresh signals just in case */
 
  return 1;
 
@@ -171,20 +204,20 @@ int a_get_using_expect
   if(stat(result_file,&outfile) == -1)
    {
     a_logmsg("%s: expect method: no downloaded config file found.",device_name);
-    return -1; /* no rancid file after rancid run - fail. */
+    return -1; /* no expect log file after expect run - fail. */
    }
   else if(outfile.st_size < MIN_WORKING_COPY_LEN) 
    {
     a_logmsg("%s: expect method: device config file is shorter than minimum expected size (%d bytes)!",device_name,MIN_WORKING_COPY_LEN);
     remove(result_file);
-    return -1; /* rancid file empty or a few bytes long - fail. */
+    return -1; /* expect log file empty or a few bytes long - fail. */
    }
   else 
    {
     a_debug_info2(DEBUGLVL5,"a_get_using_expect: re-formatting device config file.");
     pthread_mutex_lock(&G_perl_running_mutex);
 
-    if(a_cleanup_config_file_p(result_file,device_type) == -1) /* re-format output config file */
+    if(a_cleanup_config_file(result_file,device_type) == -1) /* re-format output config file */
      {
       pthread_mutex_unlock(&G_perl_running_mutex);
       a_logmsg("%s: expect method: post-processing config file failed.",device_name);

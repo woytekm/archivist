@@ -34,6 +34,8 @@
 #include <stdio.h>
 #include <svn_pools.h>
 
+#include "Python.h"
+
 #define DEBUGLVL1 1
 #define DEBUGLVL2 2
 #define DEBUGLVL3 3

@@ -300,6 +300,8 @@ void a_cleanup_and_exit
    apr_pool_destroy(G_apr_root_pool);
    svn_pool_destroy(G_svn_root_pool);
 
+   Py_Exit(0);
+
    exit(0);
 
 }
@@ -576,6 +578,12 @@ void a_init_globals
     logh->pri_max = LOG_EMERG; 
 
    init_snmp("archivist_snmp");
+   
+   /* initalize python interpreter */
+
+   Py_Initialize();
+   PyEval_InitThreads();
+   PyEval_ReleaseLock();
 
 }
 
