@@ -271,14 +271,14 @@ void a_cleanup_and_exit
 
   if( (G_active_archiver_threads > 0) || (G_active_bulk_archiver_threads > 0) )  /* we catched the TERM signal during ongoing archiving process */
    {
-     a_logmsg("Catched SIGTERM - waiting 30 sec. for started processing to end.");
+     a_logmsg("Catched SIGTERM - waiting 10 sec. for started processing to end.");
      G_stop_all_processing = 1;    /* signal key routines that they should stop furhter processing and exit (or go idle) */
 
-     while( ( (G_active_archiver_threads > 0) || (G_active_bulk_archiver_threads > 0) ) && (timer < 30) ) /* wait approx. 30 sec. */
+     while( ( (G_active_archiver_threads > 0) || (G_active_bulk_archiver_threads > 0) ) && (timer < 10) ) /* wait approx. 30 sec. */
       {
         a_debug_info2(DEBUGLVL5,
                       "a_cleanup_and_exit: waiting %ds for active threads to finish before exit...",
-                      (30 - timer));
+                      (10 - timer));
         sleep(1);   /* wait for all processing to end */
         timer += 1;
       }

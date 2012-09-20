@@ -131,6 +131,7 @@ int a_cleanup_config_file
  PyRun_SimpleFile(PyFile_AsFile(PyFileObject), py_argv[0]);
 
  a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: script executed. GIL lock release and exit.");
+ Py_DECREF(PyFileObject);
  PyGILState_Release(gstate);
 
  a_refresh_signals(); /* refresh signals just in case */
