@@ -85,9 +85,9 @@ AC_MSG_RESULT($APU_LIBS)
 
 # APR checks end
 
-LDFLAGS="$LDFLAGS -L$PERL_CORE $APR_LIBS $APU_LIBS"
+LDFLAGS="$LDFLAGS $APR_LIBS $APU_LIBS"
 
-CPPFLAGS="$CPPFLAGS -I$PERL_CORE -I/usr/include/subversion-1 -I/usr/local/include/subversion-1 $APR_INCLUDES $APU_INCLUDES"
+CPPFLAGS="$CPPFLAGS -I/usr/include/subversion-1 -I/usr/local/include/subversion-1 $APR_INCLUDES $APU_INCLUDES"
 
 CFLAGS="$CFLAGS $APR_CFLAGS"
 
