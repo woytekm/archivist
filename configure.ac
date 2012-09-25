@@ -1,4 +1,4 @@
-sinclude(m4/ac_python_devel.m4)
+sinclude(m4/ax_python_devel.m4)
 
 AC_INIT([archivist], m4_esyscmd([./version.sh | tr -d '\n']), [woytekm@gmail.com])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
@@ -85,9 +85,9 @@ AC_MSG_RESULT($APU_LIBS)
 
 # APR checks end
 
-LDFLAGS="$LDFLAGS -L$PERL_CORE $APR_LIBS $APU_LIBS"
+LDFLAGS="$LDFLAGS $APR_LIBS $APU_LIBS"
 
-CPPFLAGS="$CPPFLAGS -I$PERL_CORE -I/usr/include/subversion-1 -I/usr/local/include/subversion-1 $APR_INCLUDES $APU_INCLUDES"
+CPPFLAGS="$CPPFLAGS -I/usr/include/subversion-1 -I/usr/local/include/subversion-1 $APR_INCLUDES $APU_INCLUDES"
 
 CFLAGS="$CFLAGS $APR_CFLAGS"
 
@@ -95,6 +95,7 @@ AC_PYTHON_DEVEL
 
 CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
 LDFLAGS="$LDFLAGS $PYTHON_LDFLAGS"
+LIBS="$LIBS $PYTHON_LDFLAGS $PYTHON_EXTRA_LDFLAGS $PYTHON_EXTRA_LIBS"
 
 AC_CHECK_HEADERS([sys/procfs.h],[],[])
 AC_CHECK_HEADERS([sys/time.h])
