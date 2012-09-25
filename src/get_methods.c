@@ -102,11 +102,11 @@ int a_cleanup_config_file
 */
 {
 
- PyGILState_STATE gstate;
-
  int py_argc;
  char * py_argv[3];
  FILE *script_file;
+ PyInterpreterState *mainInterpreterState;
+ PyThreadState *myThreadState;
 
  py_argc = 2;
  py_argv[0] = malloc(strlen(platform_type) + strlen(G_config_info.script_dir) + 20);
@@ -119,20 +119,31 @@ int a_cleanup_config_file
 
  strcpy(py_argv[1],filename);
 
- a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: python script to be interpreted: %s",py_argv[0]); 
- 
- a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: acquiring GIL lock..."); 
- gstate = PyGILState_Ensure();
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: python script to be interpreted: %s",py_argv[0]);
 
- a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: GIL lock acquired. running script...");
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: acquiring GIL...");
+
+ PyEval_AcquireLock();
+
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: GIL acquired. creating new thread state...");
+
+ mainInterpreterState = G_py_main_thread_state->interp;
+ myThreadState = PyThreadState_New(mainInterpreterState);
+
+ PyThreadState_Swap(myThreadState);
+
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: running python script...");
 
  PySys_SetArgv(py_argc, py_argv);
  PyObject* PyFileObject = PyFile_FromString(py_argv[0], "r");
  PyRun_SimpleFile(PyFile_AsFile(PyFileObject), py_argv[0]);
 
- a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: script executed. GIL lock release and exit.");
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: script executed. GIL release and exit.");
  Py_DECREF(PyFileObject);
- PyGILState_Release(gstate);
+
+ PyThreadState_Swap(NULL);
+ PyThreadState_Delete(myThreadState);
+ PyEval_ReleaseLock();
 
  a_refresh_signals(); /* refresh signals just in case */
 
