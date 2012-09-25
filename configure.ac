@@ -1,4 +1,4 @@
-sinclude(m4/ac_python_devel.m4)
+sinclude(m4/ax_python_devel.m4)
 
 AC_INIT([archivist], m4_esyscmd([./version.sh | tr -d '\n']), [woytekm@gmail.com])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
@@ -95,6 +95,7 @@ AC_PYTHON_DEVEL
 
 CPPFLAGS="$CPPFLAGS $PYTHON_CPPFLAGS"
 LDFLAGS="$LDFLAGS $PYTHON_LDFLAGS"
+LIBS="$LIBS $PYTHON_LDFLAGS $PYTHON_EXTRA_LDFLAGS $PYTHON_EXTRA_LIBS"
 
 AC_CHECK_HEADERS([sys/procfs.h],[],[])
 AC_CHECK_HEADERS([sys/time.h])
