@@ -125,12 +125,9 @@ int a_cleanup_config_file
 
  PyEval_AcquireLock();
 
- a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: GIL acquired. creating new thread state...");
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: GIL acquired. creating new interpreter...");
 
- mainInterpreterState = G_py_main_thread_state->interp;
- myThreadState = PyThreadState_New(mainInterpreterState);
-
- PyThreadState_Swap(myThreadState);
+ myThreadState = Py_NewInterpreter();
 
  a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: running python script...");
 
@@ -141,8 +138,7 @@ int a_cleanup_config_file
  a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: script executed. GIL release and exit.");
  Py_DECREF(PyFileObject);
 
- PyThreadState_Swap(NULL);
- PyThreadState_Delete(myThreadState);
+ Py_EndInterpreter(myThreadState);
  PyEval_ReleaseLock();
 
  a_refresh_signals(); /* refresh signals just in case */
@@ -227,17 +223,13 @@ int a_get_using_expect
   else 
    {
     a_debug_info2(DEBUGLVL5,"a_get_using_expect: re-formatting device config file.");
-    pthread_mutex_lock(&G_embedded_running_mutex); 
 
     if(a_cleanup_config_file(result_file,device_type) == -1) /* re-format output config file */
      {
-      pthread_mutex_unlock(&G_embedded_running_mutex);
       a_logmsg("%s: expect method: post-processing config file failed.",device_name);
       remove(result_file);
       return -1;
      }
-
-    pthread_mutex_unlock(&G_embedded_running_mutex); 
    }
 
   return 1;
