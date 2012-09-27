@@ -1,6 +1,6 @@
 # Archivist - network device config archiver
 #
-# this is a script for post-processing downloaded cisco IOS config file
+# this is a script for post-processing downloaded JunOS config file
 # in short - load, filter as you wish, and save to the same filename
 #
 
