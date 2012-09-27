@@ -102,15 +102,20 @@ int a_cleanup_config_file
 */
 {
 
- int py_argc;
+ int py_argc, python_run_fail = 0;
  char * py_argv[3];
  FILE *script_file;
  PyThreadState *myThreadState;
  PyObject* PyFileObject;
 
  py_argc = 2;
- py_argv[0] = malloc(strlen(platform_type) + strlen(G_config_info.script_dir) + 20);
- py_argv[1] = malloc(strlen(filename) + 3);
+ if( ((py_argv[0] = malloc(strlen(platform_type) + strlen(G_config_info.script_dir) + 20)) == NULL) ||
+     ((py_argv[1] = malloc(strlen(filename) + 3)) == NULL ) )
+  {
+   a_debug_info2(DEBUGLVL3,"a_cleanup_config_file: malloc failed!");
+   return -1;
+  }
+
 
  strcpy(py_argv[0],G_config_info.script_dir);
  strcat(py_argv[0],"/");
@@ -127,21 +132,38 @@ int a_cleanup_config_file
 
  a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: GIL acquired. creating new interpreter...");
 
- myThreadState = Py_NewInterpreter();
+ if( (myThreadState = Py_NewInterpreter()) == NULL )
+  {
+   a_debug_info2(DEBUGLVL3,"a_cleanup_config_file: cannot create python interpreter!");
+   PyEval_ReleaseLock();
+   return -1;
+  }
+
 
  a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: running python script...");
 
  PySys_SetArgv(py_argc, py_argv);
  PyFileObject = PyFile_FromString(py_argv[0], "r");
- PyRun_SimpleFile(PyFile_AsFile(PyFileObject), py_argv[0]);
+ if( (PyRun_SimpleFile(PyFile_AsFile(PyFileObject), py_argv[0])) == -1)
+  {
+   python_run_fail = YES;
+   a_debug_info2(DEBUGLVL3,"a_cleanup_config_file: python script [%s] failed!",py_argv[0]);
+  }
 
  a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: script executed. GIL release and exit.");
  Py_DECREF(PyFileObject);
 
  Py_EndInterpreter(myThreadState);
+
  PyEval_ReleaseLock();
 
  a_refresh_signals(); /* refresh signals just in case */
+
+ if(python_run_fail)
+  {
+   a_logmsg("ERROR: python script %s failed to execute properly!",py_argv[0]);
+   return -1;
+  }
 
  return 1;
 
