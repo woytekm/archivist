@@ -19,7 +19,6 @@
 *    get_methods.c - definitions of config download methods
 */
 
-#include<sys/stat.h>
 #include<stdio.h>
 #include<unistd.h>
 #include<stdlib.h>
