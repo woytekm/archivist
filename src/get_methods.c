@@ -19,7 +19,6 @@
 *    get_methods.c - definitions of config download methods
 */
 
-#include<sys/stat.h>
 #include<stdio.h>
 #include<unistd.h>
 #include<stdlib.h>
@@ -102,15 +101,20 @@ int a_cleanup_config_file
 */
 {
 
- PyGILState_STATE gstate;
-
- int py_argc;
+ int py_argc, python_run_fail = 0;
  char * py_argv[3];
  FILE *script_file;
+ PyThreadState *myThreadState;
+ PyObject* PyFileObject;
 
  py_argc = 2;
- py_argv[0] = malloc(strlen(platform_type) + strlen(G_config_info.script_dir) + 20);
- py_argv[1] = malloc(strlen(filename) + 3);
+ if( ((py_argv[0] = malloc(strlen(platform_type) + strlen(G_config_info.script_dir) + 20)) == NULL) ||
+     ((py_argv[1] = malloc(strlen(filename) + 3)) == NULL ) )
+  {
+   a_debug_info2(DEBUGLVL3,"a_cleanup_config_file: malloc failed!");
+   return -1;
+  }
+
 
  strcpy(py_argv[0],G_config_info.script_dir);
  strcat(py_argv[0],"/");
@@ -119,22 +123,46 @@ int a_cleanup_config_file
 
  strcpy(py_argv[1],filename);
 
- a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: python script to be interpreted: %s",py_argv[0]); 
- 
- a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: acquiring GIL lock..."); 
- gstate = PyGILState_Ensure();
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: python script to be interpreted: %s",py_argv[0]);
 
- a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: GIL lock acquired. running script...");
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: acquiring GIL...");
+
+ PyEval_AcquireLock();
+
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: GIL acquired. creating new interpreter...");
+
+ if( (myThreadState = Py_NewInterpreter()) == NULL )
+  {
+   a_debug_info2(DEBUGLVL3,"a_cleanup_config_file: cannot create python interpreter!");
+   PyEval_ReleaseLock();
+   return -1;
+  }
+
+
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: running python script...");
 
  PySys_SetArgv(py_argc, py_argv);
- PyObject* PyFileObject = PyFile_FromString(py_argv[0], "r");
- PyRun_SimpleFile(PyFile_AsFile(PyFileObject), py_argv[0]);
+ PyFileObject = PyFile_FromString(py_argv[0], "r");
+ if( (PyRun_SimpleFile(PyFile_AsFile(PyFileObject), py_argv[0])) == -1)
+  {
+   python_run_fail = YES;
+   a_debug_info2(DEBUGLVL3,"a_cleanup_config_file: python script [%s] failed!",py_argv[0]);
+  }
 
- a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: script executed. GIL lock release and exit.");
+ a_debug_info2(DEBUGLVL5,"a_cleanup_config_file: script executed. GIL release and exit.");
  Py_DECREF(PyFileObject);
- PyGILState_Release(gstate);
+
+ Py_EndInterpreter(myThreadState);
+
+ PyEval_ReleaseLock();
 
  a_refresh_signals(); /* refresh signals just in case */
+
+ if(python_run_fail)
+  {
+   a_logmsg("ERROR: python script %s failed to execute properly!",py_argv[0]);
+   return -1;
+  }
 
  return 1;
 
@@ -216,17 +244,13 @@ int a_get_using_expect
   else 
    {
     a_debug_info2(DEBUGLVL5,"a_get_using_expect: re-formatting device config file.");
-    pthread_mutex_lock(&G_embedded_running_mutex); 
 
     if(a_cleanup_config_file(result_file,device_type) == -1) /* re-format output config file */
      {
-      pthread_mutex_unlock(&G_embedded_running_mutex);
       a_logmsg("%s: expect method: post-processing config file failed.",device_name);
       remove(result_file);
       return -1;
      }
-
-    pthread_mutex_unlock(&G_embedded_running_mutex); 
    }
 
   return 1;
