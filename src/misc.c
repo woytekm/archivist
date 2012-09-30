@@ -48,8 +48,8 @@
 
 #if defined(HAVE_LIBSNMP) || defined(HAVE_LIBNETSNMP)
 
-#include <net-snmp/library/snmp_logging.h>
 #include <net-snmp/net-snmp-config.h>
+#include <net-snmp/library/snmp_logging.h>
 
 #endif
 
