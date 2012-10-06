@@ -24,6 +24,6 @@ cisco "write term"  command. you achieve this by issuing "log_file -a -noappend 
 in your expect script just before issuing equivalent of "write term" command. (see cisco.get.telnet, or
 cisco.get.ssh for example of config pull script).
  
-Next thing is to create <platform_name>.process perl script - here you can post-process downloaded
+Next thing is to create <platform_name>.process.py python script - here you can post-process downloaded
 config to remove some unneeded lines (this is not required - the script is optional).
 

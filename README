@@ -19,13 +19,13 @@ Archivist owns big credit to Rancid - similiar router config archiving tool writ
 
 To compile, you must have the following libraries installed:
 
- - perl (preferably compliled with -Dusethreads -Duseithreads)
+ - python - C development environment (libpython.so)
  - pthreads library
  - subversion (at least 1.6)
  - Apache Portable Runtime (it's needed to compile subversion, so it should 
                             already be installed in the previous step)
- - net-snmp
- - mysql development libraries (if you'll enable MYSQL storage for device DB,logs, and configuration data).
+ - net-snmp development environment
+ - mysql development libraries (if you'll enable MYSQL storage for device DB,logs, and configuration data)
 
 To create "configure" script, first run autoreconf -iv
 
