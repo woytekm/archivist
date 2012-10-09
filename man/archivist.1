@@ -6,7 +6,7 @@ archivist \- network device configuration archiving daemon
 .TP
 .B archivist [-v] [-d] [-c config_file] [-h]
 .SH DESCRIPTION
-Archivist is a network device config archivig daemon. It can archive and version text configuration from various network devices, like routers or switches by Cisco, Juniper, or Brocade/Foundry. Archivist uses Subversion as revision control system.
+Archivist is a network device config archivig daemon. It can archive and version text configuration from various network devices, like routers and switches by Cisco, Juniper, or Brocade/Foundry. Archivist uses Subversion as revision control system.
 Archivist can work (simultaneously) in two modes: 
 .PP
 1. Scheduled config archiving at a time/date specified in configuration file.
@@ -46,6 +46,8 @@ Main program configuration file (default location).
 Default location of plaintext database of versioned devices.
 Format of the database is as follows:
 device_group:device_name:device_type:auth_set_name:access_method
+example database record would be:
+none:my_router.domain.org:cisco:my_auth_set_01:ssh
 .TP
 .B /usr/local/share/archivist/helpers
 Default location of helper expect scripts (should be installed during "make install").

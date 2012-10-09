@@ -103,6 +103,8 @@ AC_CHECK_HEADERS([stdarg.h],[],[])
 
 AC_CHECK_HEADER([regex.h],[],[echo "Cannot find regex.h header file (GNU regex).";exit -1])
 
+AC_CHECK_LIB([kvm],[kvm_open])
+
 AC_CHECK_LIB([nsl],[gethostbyname],[],[])
 
 AC_CHECK_LIB([nsl],[getaddrinfo],[],[])

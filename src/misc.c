@@ -40,6 +40,15 @@
 #include <stdio.h>
 #include <time.h>
 
+#ifdef __FreeBSD__
+
+#include <kvm.h>
+#include <sys/sysctl.h>
+#include <sys/user.h>
+#include <sys/file.h>
+
+#endif
+
 #ifdef HAVE_SYS_PROCFS_H 
 
 #include <sys/procfs.h>
@@ -48,8 +57,8 @@
 
 #if defined(HAVE_LIBSNMP) || defined(HAVE_LIBNETSNMP)
 
-#include <net-snmp/library/snmp_logging.h>
 #include <net-snmp/net-snmp-config.h>
+#include <net-snmp/library/snmp_logging.h>
 
 #endif
 
@@ -290,8 +299,10 @@ void a_cleanup_and_exit
 
    a_remove_lockfile();
 
-   fclose(G_logfile_handle);
-   close(G_syslog_file_handle);
+   if(G_logfile_handle != NULL)
+    fclose(G_logfile_handle);
+   if(G_syslog_file_handle != NULL)
+    close(G_syslog_file_handle);
 
 #ifdef USE_MYSQL
    mysql_close(G_db_connection);
@@ -543,8 +554,8 @@ void a_init_globals
 *
 */
 {
-   G_logfile_handle = 0;
-   G_syslog_file_handle = 0;
+   G_logfile_handle = NULL;
+   G_syslog_file_handle = NULL;
    G_active_archiver_threads = 0;
    G_active_bulk_archiver_threads = 0;
    G_syslog_file_size = 0;
@@ -950,6 +961,10 @@ void a_dump_memstats(void)
  #endif
  #endif
 
+ #ifdef __FreeBSD__
+  a_dump_memstats_freebsd();
+ #endif
+
  /* other system-dependent methods have yet to be implemented */
 
 }
@@ -1015,6 +1030,29 @@ void a_dump_memstats_linux(void)
  a_logmsg("memstats: shared: %u, text: %u, data: %u, total: %u", share, text, data, size);
 
 }
+
+#ifdef __FreeBSD__
+
+void a_dump_memstats_freebsd(void)
+/*
+*
+* dump memory stats - FreeBSD version (from: http://www.jimbrooks.org/web/c++/system_specific.php)
+*
+*/
+{
+
+  kvm_t* kd = kvm_open( NULL, "/dev/null", NULL, O_RDONLY, "kvm_open" );
+  if ( kd != NULL )
+  {
+    int procCount = 0;
+    struct kinfo_proc* kp = kvm_getprocs( kd, KERN_PROC_PID, getpid(), &procCount );
+    if ( (kp != NULL) && (procCount >= 1) )
+    a_logmsg("memstats: %d", kp->ki_rssize * getpagesize());
+  }
+
+}
+
+#endif
 
 /* end of misc.c */
 
