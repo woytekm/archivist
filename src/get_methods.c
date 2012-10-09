@@ -23,6 +23,7 @@
 #include<unistd.h>
 #include<stdlib.h>
 #include<fcntl.h>
+#include<sys/stat.h>
 
 #include "Python.h"
 
@@ -179,7 +180,7 @@ int a_get_using_expect
 {
 
   auth_set_t *device_auth_set;
-  struct stat outfile;
+  struct stat outfile,helper_script;
   char script_path[MAXPATH];
   char command[MAXPATH];
   char result_file[MAXPATH];
@@ -207,15 +208,13 @@ int a_get_using_expect
 
   snprintf(result_file,MAXPATH,"%s.new",device_name);
 
-  struct stat helper_script_stat;
-
-  if(stat(script_path,&helper_script_stat))
+  if(stat(script_path,&helper_script))
    {
     a_logmsg("FATAL: cannot open %s helper script!",script_path);
     return -1;
    }
   
-  if(helper_script_stat.st_size == 0)
+  if(helper_script.st_size == 0)
    {
     a_logmsg("FATAL: %s helper script has zero size!",script_path);
     return -1;
