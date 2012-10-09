@@ -47,7 +47,8 @@ for line in in_lines:
   if(not remove):
     outfile.write("%s" % line)
     written_line += 1
- 
+
+outfile.write("\n"); 
 outfile.close()
 
 # end
