@@ -149,6 +149,8 @@ expect {
            }
        }
 
+send "\r"
+expect "#"
 
 log_file -a -noappend [lindex $argv 0].new
 set timeout 30
