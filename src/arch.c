@@ -456,8 +456,9 @@ void a_archive_single
   router_db_entry_t *router_entry;
   pthread_t my_id;
   char *devtype;
-  int unlocked = 0;
+  int unlocked = 0, unlock_wait = 0;
 
+  #define ARCH_WAIT_TIMEOUT 30
 
   a_debug_info2(DEBUGLVL5,"a_archive_single: input data at 0x%p",arg);
 
@@ -478,7 +479,7 @@ void a_archive_single
                   my_id,config_event_info.device_id); 
     a_debug_info2(DEBUGLVL5,"a_archive_single(%u): trying to sync to SVN...",my_id);
 
-    while(!unlocked)
+    while( (!unlocked) || (unlock_wait > ARCH_WAIT_TIMEOUT) )
     {
      /* check if another archivization is running */
      if(!a_is_archived_now(G_router_db, config_event_info.device_id)) 
@@ -507,10 +508,18 @@ void a_archive_single
        a_debug_info2(DEBUGLVL5,"a_archive_single(%u): another archivization of %s is running. waiting...",
                      my_id,config_event_info.device_id);
        sleep(1);  /* wait for device to be unlocked by another thread */
-       /* TODO: deadlock timer here */
+       unlock_wait++;
       }
     }
   
+
+   if(unlock_wait > ARCH_WAIT_TIMEOUT)
+    {
+     a_debug_info2(DEBUGLVL3,
+                   "a_archive_single(%u): timeout waiting for another archivization of %s to end! archivization failed!",
+                   my_id,config_event_info.device_id);
+    }
+
     a_debug_info2(DEBUGLVL5,"a_archive_single(%u): after SVN sync...",my_id);
 
    }
