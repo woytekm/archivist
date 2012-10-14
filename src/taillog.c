@@ -46,9 +46,9 @@ FILE *a_syslog_fstream_setup
 */
 {
   int fsize;
-  FILE *fdesc;
+  int fdesc;
 
-  fdesc = (FILE *)open(G_config_info.syslog_filename,O_RDONLY);
+  fdesc = open(G_config_info.syslog_filename,O_RDONLY);
 
   if(fdesc == NULL)
    {
