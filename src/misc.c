@@ -926,7 +926,7 @@ const char *a_mystristr(const char *haystack, const char *needle)
       }
    }
 
-   return 0;
+   return NULL;
 }
 
 void a_config_error(char *config_field)
@@ -1054,5 +1054,107 @@ void a_dump_memstats_freebsd(void)
 
 #endif
 
-/* end of misc.c */
 
+int a_command_socket_setup(void)
+{
+/*
+*
+* prepare unix domain socket on which archivist will listen for external commands
+*
+*/
+ int sock,len;
+ struct sockaddr_un local;
+
+   if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
+      printf("ERROR: cannot create a command socket!");
+      return -1;
+   }
+
+   fcntl(sock, F_SETFL, O_NONBLOCK);
+
+   local.sun_family = AF_UNIX;
+   strcpy(local.sun_path, G_config_info.command_socket_path);
+   unlink(local.sun_path);
+   len = strlen(local.sun_path) + sizeof(local.sun_family);
+   if (bind(sock, (struct sockaddr *)&local, len) == -1) {
+        printf("ERROR: cannot bind to command socket %s!",
+                G_config_info.command_socket_path);
+        return -1;
+    }
+
+   if (listen(sock, 5) == -1) {
+      printf("ERROR: listen failed on command socket!");
+      return -1;}
+
+  return sock;
+}
+
+int a_check_and_parse_cmds(int socket)
+/*
+*
+* receive and parse external command (trough unix domain socket)
+*
+*/
+{
+
+    #define MAX_CMDSIZ 128
+
+    int n,s2,t;
+    char str[MAX_CMDSIZ];
+    pthread_attr_t thread_attr;
+    pthread_t scheduled_thread;
+    size_t stacksize = ARCHIVIST_THREAD_STACK_SIZE;
+    config_event_info_t *confinfo;
+    struct sockaddr_un remote;
+
+    t = sizeof(remote);
+
+    if ((s2 = accept(socket, (struct sockaddr *)&remote, &t)) != -1 ) 
+     {
+      a_debug_info2(DEBUGLVL3,
+                    "a_poll_command_socket: accepted a connection on command channel.");
+      n = recv(s2, str, MAX_CMDSIZ, 0);
+      if (n <= 0)
+        { if (n < 0) perror("recv"); return -1; }
+      else
+       {
+         a_logmsg("received external command: %s",str);
+         a_debug_info2(DEBUGLVL3,"a_check_and_parse_cmds: received a command: %s",str);
+
+        /* command parsing goes here - for now command string is treated as a name of device to check */
+
+        confinfo = malloc(sizeof(config_event_info_t));
+ 
+        pthread_attr_init(&thread_attr);
+        pthread_attr_setdetachstate(&thread_attr,PTHREAD_CREATE_DETACHED);
+        pthread_attr_setstacksize(&thread_attr, stacksize);
+
+        strcpy(confinfo->configured_by,"triggered_archiving");
+        strncpy(confinfo->device_id,str,sizeof(confinfo->device_id));
+        a_trimwhitespace(confinfo->device_id);
+
+        a_debug_info2(DEBUGLVL5,
+                      "a_check_and_run_jobs: starting externally-triggered device archiving for: [%s]."
+                      ,confinfo->device_id);
+        a_logmsg("%s: starting externally-triggered archiver thread.",confinfo->device_id);
+
+        if(pthread_create(&scheduled_thread, &thread_attr, a_archive_single, (void *)confinfo))
+         {
+          a_logmsg("fatal! cannot create externally-triggered archiver thread!");
+          a_debug_info2(DEBUGLVL5,"a_check_and_parse_cmds: cannot create externally-triggered archiver thread!");
+         }
+
+        usleep(500);
+
+       }
+
+      close(s2);
+      return 1;
+   }
+  
+   return 0;
+}
+
+
+
+/* end of misc.c */

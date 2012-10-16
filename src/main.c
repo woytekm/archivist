@@ -43,7 +43,7 @@ main
    char *raw_config[MAX_CONF_LINES];
    char syslog_msgbuffer[BUFLEN];
    char ip_from[IPADDRLEN];
-   int syslog_socket,pid,c;
+   int pid,c;
 
    a_init_globals(); /* init global variables, mutexes, and other one-time stuff  */
 
@@ -174,6 +174,8 @@ main
    /*if above SVN test passed - we assume that SVN is accessible - OK:*/
    a_logmsg("--> SVN repository path: %s (OK)",G_config_info.repository_path); 
 
+   if(G_config_info.open_command_socket)
+    a_logmsg("--> listening to commands on %s",G_config_info.command_socket_path);
    if(G_config_info.logging)
     a_logmsg("--> logging events to %s",G_config_info.log_filename);
    if(G_config_info.tail_syslog)
@@ -191,10 +193,13 @@ main
    /* setup sockets and file descriptors to listen on (if configured to do so): */
 
    if(G_config_info.listen_syslog)
-    syslog_socket = a_syslog_socket_setup();
+    G_syslog_socket = a_syslog_socket_setup();
 
    if(G_config_info.tail_syslog)
     G_syslog_file_handle = a_syslog_fstream_setup();
+
+   if(G_config_info.open_command_socket)
+    G_command_socket = a_command_socket_setup();
 
    /* choose main loop delay value */
 
@@ -210,7 +215,7 @@ main
    while(TRUE)
     {
      if(G_config_info.listen_syslog)
-      if(a_check_syslog_stream(syslog_socket,syslog_msgbuffer,ip_from))
+      if(a_check_syslog_stream(G_syslog_socket,syslog_msgbuffer,ip_from))
         a_parse_syslog_buffer(syslog_msgbuffer,ip_from);
 
      if(G_config_info.tail_syslog)
@@ -218,6 +223,9 @@ main
         a_parse_syslog_buffer(syslog_msgbuffer,NULL); 
 
      a_check_and_run_jobs();         /* execute cron-like job manager */
+
+     if(G_config_info.open_command_socket)
+      a_check_and_parse_cmds(G_command_socket);
 
      usleep(G_mainloop_dly);
     }

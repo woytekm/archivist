@@ -100,6 +100,8 @@ void a_load_config_defaults
 
   conf_struct->listen_syslog = DEFAULT_CONF_LISTEN_SYSLOG;
 
+  conf_struct->open_command_socket = DEFAULT_CONF_LISTEN_CMDSOCK;
+
   conf_struct->syslog_port = DEFAULT_CONF_SYSLOG_PORT;
 
   conf_struct->keep_changelog = DEFAULT_CONF_CHANGELOG;
@@ -117,6 +119,8 @@ void a_load_config_defaults
   strcpy(conf_struct->expect_exec_path,DEFAULT_CONF_EXPECT_PATH);
 
   strcpy(conf_struct->locks_dir,DEFAULT_CONF_LOCKS_DIR);
+
+  strcpy(conf_struct->command_socket_path,DEFAULT_CONF_CMDSOCK);
 
 #ifdef USE_MYSQL
   strcpy(conf_struct->mysql_dbname,DEFAULT_CONF_SQL_DBNAME);
@@ -852,24 +856,24 @@ router_db_entry_t *a_router_db_search
 
    a_debug_info2(DEBUGLVL5,"a_router_db_search: linked list at 0x%p",router_db_idx);
 
-   while(tmp_pointer != NULL)
-    {
+   if(strlen(hostname) > 0)  /* don't try to search for empty string */
 
-     if(strlen(tmp_pointer->hostname) > 0)
+    while(tmp_pointer != NULL)
+     {
+
+     if(strlen(a_trimwhitespace(tmp_pointer->hostname)) == 
+        strlen(a_trimwhitespace(hostname)) ) /* we want exact match */
       {
 
        strstr_out = a_mystristr(tmp_pointer->hostname, hostname);
 
-       if(strstr_out != NULL)
-        if(strlen(strstr_out) == strlen(hostname))
-         {
-          return tmp_pointer; /* found entry - return address of struct */
-         }
+       if(strstr_out != NULL) 
+         return tmp_pointer; /* found entry - return address of struct */
        }
 
       tmp_pointer = tmp_pointer->prev;
 
-    }
+     }
 
 #else  /* search version for MYSQL db */
   
@@ -902,7 +906,7 @@ router_db_entry_t *a_router_db_search
 
    free(sql_query_string);
 
-#endif
+ #endif
 
    return NULL; /* return nothing as searched hostname was not found in device database */
 }

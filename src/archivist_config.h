@@ -23,12 +23,12 @@
 #define NO 0
 
 #define DEFAULT_CONF_INSTANCE_ID 1
-#define DEFAULT_CONF_LOGGING 1
+#define DEFAULT_CONF_LOGGING YES
 #define DEFAULT_CONF_LOGFILENAME "/usr/local/var/archivist.log"
 #define DEFAULT_CONF_WORKING_DIR "/usr/local/tmp"
-#define DEFAULT_CONF_TAIL_SYSLOG 0
-#define DEFAULT_CONF_LISTEN_SYSLOG 0
-#define DEFAULT_CONF_CHANGELOG 0
+#define DEFAULT_CONF_TAIL_SYSLOG NO
+#define DEFAULT_CONF_LISTEN_SYSLOG NO
+#define DEFAULT_CONF_CHANGELOG NO
 #define DEFAULT_CONF_SYSLOG_PORT 514
 #define DEFAULT_CONF_SYSLOG_FILENAME "/var/log/messages"
 #define DEFAULT_CONF_RANCID_PATH "/usr/local/rancid/bin/rancid"
@@ -37,6 +37,8 @@
 #define DEFAULT_CONF_EXPECT_PATH "expect"    /* we assume that expect should be somewhere in the path */
 #define DEFAULT_CONF_CHANGELOG_FILENAME "config_changelog.log"
 #define DEFAULT_CONF_SQL_DBNAME "archivist"
+#define DEFAULT_CONF_CMDSOCK "/tmp/archivist.sock"
+#define DEFAULT_CONF_LISTEN_CMDSOCK YES
 
 #define ARCHIVIST_MYSQL_USER "root"
 #define ARCHIVIST_MYSQL_PASSWORD "mysecret" 
@@ -77,6 +79,8 @@ struct config_info_t{ int  instance_id;		/* Archivist instance ID  */
                       char *repository_path;        /* URL of the SVN repository - required */
                       int  archiver_threads;	    /* number of concurent archiver threads */
                       struct cronjob_t *job_table[MAX_JOBS]; /* table of scheduled backup jobs */
+                      int open_command_socket;      /* listen to commands on unix domain socket */
+		      char *command_socket_path[MAXPATH]; /* domain socket path */
 #ifdef USE_MYSQL
 		      char mysql_server[255];	/* mysql server name */
 		      char mysql_user[255];         /* mysql connection username */

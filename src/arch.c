@@ -199,7 +199,8 @@ int a_sync_device
         /* new group created - go on as usually */
 
         checkout_status = a_svn_checkout(hostname,full_svn_path,svn_tmp_dirname,
-                                         thread_global_apr_pool, thread_global_svn_pool); /* do a checkout again */
+                                         thread_global_apr_pool, 
+                                         thread_global_svn_pool); /* do a checkout again */
 
        } /* if group doesn't exist */
      } /* if group != "none" */
@@ -479,7 +480,7 @@ void a_archive_single
                   my_id,config_event_info.device_id); 
     a_debug_info2(DEBUGLVL5,"a_archive_single(%u): trying to sync to SVN...",my_id);
 
-    while( (!unlocked) || (unlock_wait > ARCH_WAIT_TIMEOUT) )
+    while( (!unlocked) && (unlock_wait < ARCH_WAIT_TIMEOUT) )
     {
      /* check if another archivization is running */
      if(!a_is_archived_now(G_router_db, config_event_info.device_id)) 

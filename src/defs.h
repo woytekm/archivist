@@ -99,6 +99,9 @@ char G_debug_msg[16384];
 FILE *G_logfile_handle;
 FILE *G_syslog_file_handle;
 
+int G_syslog_socket;
+int G_command_socket;
+
 int G_syslog_file_size;
 int G_router_db_entries;
 int G_current_debug_level;
