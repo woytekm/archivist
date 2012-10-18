@@ -1067,7 +1067,7 @@ int a_command_socket_setup(void)
 
    if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
       printf("ERROR: cannot create a command socket!");
-      return -1;
+      a_cleanup_and_exit();
    }
 
    fcntl(sock, F_SETFL, O_NONBLOCK);
@@ -1079,12 +1079,12 @@ int a_command_socket_setup(void)
    if (bind(sock, (struct sockaddr *)&local, len) == -1) {
         printf("ERROR: cannot bind to command socket %s!",
                 G_config_info.command_socket_path);
-        return -1;
+        a_cleanup_and_exit();
     }
 
    if (listen(sock, 5) == -1) {
       printf("ERROR: listen failed on command socket!");
-      return -1;}
+      a_cleanup_and_exit();}
 
   return sock;
 }
