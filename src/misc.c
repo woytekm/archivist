@@ -1112,7 +1112,7 @@ int a_check_and_parse_cmds(int socket)
     if ((s2 = accept(socket, (struct sockaddr *)&remote, &t)) != -1 ) 
      {
       a_debug_info2(DEBUGLVL3,
-                    "a_poll_command_socket: accepted a connection on command channel.");
+                    "a_check_and_parse_cmds: accepted a connection on command channel.");
       bzero(str,MAX_CMDSIZ);
       n = recv(s2, str, MAX_CMDSIZ, 0);
 

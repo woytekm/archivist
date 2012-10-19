@@ -657,6 +657,16 @@ void a_parse_config_info
            a_config_error("ListenSyslog");
          }
 
+    if(strstr(conf_field,"ListenCommands"))
+         {
+          conf_field = (char *)strtok(NULL, " ");
+          tmp1 = atoi(conf_field);
+          if((tmp1 == 0 || tmp1 == 1))
+           conf_struct->open_command_socket = tmp1;
+          else
+           a_config_error("ListenComands");
+         }
+
     if(strstr(conf_field,"SyslogPort")) 
          {
           conf_field = (char *)strtok(NULL, " ");
@@ -703,6 +713,17 @@ void a_parse_config_info
            strcpy(conf_struct->router_db_path,conf_field);
            }
           else a_config_error("RouterDBPath");
+         }
+
+    if(strstr(conf_field,"CommandSocketPath"))
+         {
+          conf_field = (char *)strtok(NULL, " ");
+          if( (strlen(conf_field) > 0) && (strlen(conf_field) < MAXPATH) )
+           {
+           conf_struct->router_db_path = malloc((strlen(conf_field))+1);
+           strcpy(conf_struct->command_socket_path,conf_field);
+           }
+          else a_config_error("CommandSocketPath");
          }
 
     if(strstr(conf_field,"TerminalArchivingMethod"))
