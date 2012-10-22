@@ -80,7 +80,7 @@ struct config_info_t{ int  instance_id;		/* Archivist instance ID  */
                       int  archiver_threads;	    /* number of concurent archiver threads */
                       struct cronjob_t *job_table[MAX_JOBS]; /* table of scheduled backup jobs */
                       int open_command_socket;      /* listen to commands on unix domain socket */
-		      char *command_socket_path[MAXPATH]; /* domain socket path */
+		      char command_socket_path[MAXPATH]; /* domain socket path */
 #ifdef USE_MYSQL
 		      char mysql_server[255];	/* mysql server name */
 		      char mysql_user[255];         /* mysql connection username */

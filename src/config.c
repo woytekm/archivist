@@ -498,6 +498,19 @@ void a_parse_config_info
   tmp1 = atoi(archivist_config[18]);
    if(( tmp1 > 0 || tmp1 < 256 )) conf_struct->archiver_threads = tmp1;
   else a_config_error("ArchiverThreads");
+
+  /* command socket option */
+  tmp1 = atoi(archivist_config[19]);
+   if(( tmp1 == 0 || tmp1 == 1 )) conf_struct->open_command_socket = tmp1;
+  else a_config_error("ListenCommands");
+
+  /* command socket path */
+  if( (strlen(archivist_config[20]) > 0) && (strlen(archivist_config[20]) < MAXPATH) )
+   {
+    strcpy(conf_struct->command_socket_path,archivist_config[20]);
+   }
+  else a_config_error("CommandSocketPath");
+
   
   int record_counter = 0;
   char data[1024];

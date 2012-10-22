@@ -135,7 +135,41 @@ AC_CHECK_LIB([m],[cos],[],[echo "Error! No libm library found.";exit -1])
 
 if test "$enable_mysql" = "yes"
  then
-  AC_CHECK_LIB([mysqlclient],[mysql_real_connect],[],[echo "Error! No mysqlclient library found.";exit -1])
+   AC_CHECK_LIB([mysqlclient],[mysql_real_connect],[],[echo "Error! No mysqlclient library found.";exit -1])
+
+   #mysql checks - once again borrowed from dbslayer's configure.ac
+
+   AC_ARG_WITH(mysql-config,[  --with-mysql-config=PATH   The path to mysql-config if not in $PATH], 
+                             [MYSQLCONFIG=$withval], [MYSQLCONFIG=mysql-config-was-not-found-by-configure])
+
+   if test "x$MYSQLCONFIG" = "xmysql-config-was-not-found-by-configure"; then
+	AC_PATH_PROG( MYSQLCONFIG, mysql_config, mysql_config-was-not-found-by-configure,
+                      $PATH:/usr/bin:/usr/local/bin)
+   fi
+
+   AC_SUBST(MYSQLCONFIG)
+   if test "x$MYSQLCONFIG" = "xmysql_config-was-not-found-by-configure"; then
+        AC_MSG_ERROR([mysql_config wasn't found please install http://www.mysql.com ])
+   else
+        MYSQL_CFLAGS=`$MYSQLCONFIG --cflags`
+        MYSQL_INCLUDES=`$MYSQLCONFIG --include`
+        MYSQL_LIBS=`$MYSQLCONFIG --libs_r`
+   fi
+
+   AC_SUBST(MYSQL_CFLAGS)
+   AC_SUBST(MYSQL_INCLUDES)
+   AC_SUBST(MYSQL_LIBS)
+
+   AC_MSG_CHECKING(for MySQL CFLAGS)
+   AC_MSG_RESULT($MYSQL_CFLAGS)
+   AC_MSG_CHECKING(for MySQL includes)
+   AC_MSG_RESULT($MYSQL_INCLUDES)
+   AC_MSG_CHECKING(for MySQL libraries)
+   AC_MSG_RESULT($MYSQL_LIBS)
+
+   LDFLAGS="$LDFLAGS $MYSQL_CFLAGS"
+   CFLAGS="$CFLAGS $MYSQL_LIBS"
+
  fi
 
 AC_CONFIG_HEADERS([config.h])

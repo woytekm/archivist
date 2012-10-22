@@ -22,6 +22,8 @@ CREATE TABLE archivist_config (
   router_db_path char(255) default NULL,
   repository_path char(255) default NULL,
   archiver_threads int(11) default NULL
+  open_command_socket int(11) default NULL,
+  command_socket_path char(255) default NULL,
 ) TYPE=MyISAM;
 
 
@@ -109,5 +111,20 @@ CREATE TABLE info (
   archivist_timestamp datetime 
 ) TYPE=MyISAM;
 
+
+--
+-- load config defaults
+--
+
 insert into info values (now());
- 
+
+INSERT INTO archivist_config VALUES (2,'/usr/local/tmp',1,'/usr/local/var/archivist.log','internal','','','/usr/local/share/archivist/helpers','/usr/local/rancid/bin/rancid','/usr/local/bin/expect',1,'/var/log/syslog_info',0,0,1,'/usr/local/var/config_changelog.log','/usr/local/share/archivist/router.db','file:///usr/local/archivist-svn/',20,1,'/tmp/archivist.sock');
+
+INSERT INTO config_regexp VALUES ('SYS-5-CONFIG_I','by');
+INSERT INTO config_regexp VALUES ('running-config','by');
+INSERT INTO config_regexp VALUES ('UI_DBASE_LOGOUT_EVENT','User');
+
+
+--
+-- schema end
+-- 
