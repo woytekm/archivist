@@ -359,6 +359,8 @@ void a_parse_config_info
   MYSQL_RES *raw_archivist_config;
   MYSQL_ROW archivist_config;
 
+  char config_query[MAXQUERY];
+
 
   while(config_lines[i] != NULL)
    {
@@ -379,13 +381,38 @@ void a_parse_config_info
         }
     if(strstr(conf_field,"MYSQLPassword"))
         {
-        conf_field = (char *)strtok(NULL, " ");
+         conf_field = (char *)strtok(NULL, " ");
          if(strlen(conf_field)>0)
          {strcpy(conf_struct->mysql_password,conf_field);}
+        }
+   if(strstr(conf_field,"MYSQLDBName"))
+        {
+         conf_field = (char *)strtok(NULL, " ");
+         if(strlen(conf_field)>0)
+         {strcpy(conf_struct->mysql_dbname,conf_field);}
+        }
+    if(strstr(conf_field,"InstanceID"))
+        {
+         conf_field = (char *)strtok(NULL, " ");
+         tmp1 = atoi(conf_field);
+         if((tmp1 > 0) && (tmp1 < 16))
+          conf_struct->instance_id = tmp1;
+         else
+          {
+           printf("FATAL: a_parse_config_info: instance number is not in 1 - 16 range!\n");
+           a_cleanup_and_exit();
+          }
         }
 
     i++;
 
+   }
+  
+  if( (strlen(conf_struct->mysql_server) < 1) || (strlen(conf_struct->mysql_user) < 1) ||
+      (strlen(conf_struct->mysql_password) < 1) ) /* MYSQL server info is not complete */
+   {
+    printf("FATAL: a_parse_config_info: archivist.conf does not contain sufficient MYSQL connection info!\n");
+    a_cleanup_and_exit();
    }
 
   /* we have MYSQL connection info now - connect to the database, 
@@ -393,16 +420,16 @@ void a_parse_config_info
 
   a_mysql_connect();
 
-  raw_archivist_config = a_mysql_select("select * from archivist_config");
+ 
+  snprintf(config_query,MAXQUERY,"select * from archivist_config where instance_id=%d",
+           conf_struct->instance_id);
+
+  raw_archivist_config = a_mysql_select(config_query);
   archivist_config = mysql_fetch_row(raw_archivist_config);
 
-  /* instance_id */ 
-  tmp1 = atoi(archivist_config[0]);
-  if((tmp1 > 0) && (tmp1 < 16)) 
-   conf_struct->instance_id = tmp1;
-  else
+  if(mysql_num_rows(archivist_config) != 1) /* there should be exactly one row of config per instance */
   {
-   printf("FATAL: a_parse_config_info: instance number is not in 1 - 16 range!\n");
+   printf("FATAL: a_parse_config_info: no config data for instance %d!\n",conf_struct->instance_id);
    a_cleanup_and_exit();
   }
 
