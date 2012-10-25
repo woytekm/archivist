@@ -83,7 +83,7 @@ int a_sync_device
 
    /* construct filenames and paths needed for SVN checkout/commit: */
 
-   snprintf(svn_tmp_dirname,MAXPATH,"%s.%s",G_svn_tmp_prefix,hostname);
+   snprintf(svn_tmp_dirname,MAXPATH,"%s.%d.%s",G_svn_tmp_prefix,G_config_info.instance_id,hostname);
    snprintf(downloaded_config,MAXPATH,"%s.new",hostname);
    snprintf(working_copy_config,MAXPATH,"%s/%s",svn_tmp_dirname,hostname);
 

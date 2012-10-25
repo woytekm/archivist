@@ -447,7 +447,7 @@ int a_svn_configured_repo_stat
    svn_pool = svn_pool_create(NULL);
    apr_pool_create(&apr_pool,NULL);
 
-   snprintf(svn_tmp_dirname,MAXPATH,"%s.test",G_svn_tmp_prefix);
+   snprintf(svn_tmp_dirname,MAXPATH,"%s.%d.test",G_svn_tmp_prefix,G_config_info.instance_id);
 
    checkout_status = a_svn_sparse_checkout(G_config_info.repository_path,svn_tmp_dirname,
                                            apr_pool, svn_pool);

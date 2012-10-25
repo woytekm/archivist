@@ -430,7 +430,7 @@ static int a_range_parse
 
 
 cronjob_t *a_job_parse
-(char *job_data,int *jobcnt)
+(char *job_data)
 /*
  * parse cron job string to a cronjob_t structure
  * (code donor was minix 3 cron server)
@@ -573,13 +573,11 @@ cronjob_t *a_job_parse
                 a_job_reschedule(job);    /* Compute next time to run. */
         }
    
-     (*jobcnt)++;
-
      return job;
     
     parse_error:
      a_debug_info2(DEBUGLVL3,"a_job_parse: cronjob parsing error!\n");
-     a_logmsg("ScheduleBackup - config line parse error!");
+     a_logmsg("ScheduleBackup %s - config line parse error!",job_data);
      return NULL;
 
 }
@@ -601,16 +599,16 @@ void a_check_and_run_jobs
    int i;
    pthread_t scheduled_thread;
 
-
    if(G_stop_all_processing)
      return 1;           /* program is in the state of cleanup&exit - just return. */
 
    time(&G_now);
 
-   for(i=0;i<G_jobcount;i++)
-    {
-    if(G_cronjobs[i]->rtime <= G_now)
+   if(G_jobcount)
+    for(i=1;i<G_jobcount;i++)
      {
+     if(G_cronjobs[i]->rtime <= G_now)
+      {
 
       a_debug_info2(DEBUGLVL5,"a_check_and_run_jobs: time has come for job %d: %s",i,G_cronjobs[i]->cmd);
 
@@ -688,7 +686,6 @@ void a_check_and_run_jobs
     }
    }
 }
-
 
 
 /* end of scheduler.c  */

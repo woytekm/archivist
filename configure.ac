@@ -167,8 +167,8 @@ if test "$enable_mysql" = "yes"
    AC_MSG_CHECKING(for MySQL libraries)
    AC_MSG_RESULT($MYSQL_LIBS)
 
-   LDFLAGS="$LDFLAGS $MYSQL_CFLAGS"
-   CFLAGS="$CFLAGS $MYSQL_LIBS"
+   LDFLAGS="$LDFLAGS $MYSQL_LIBS"
+   CFLAGS="$CFLAGS $MYSQL_CFLAGS"
 
  fi
 

@@ -64,9 +64,9 @@ CREATE TABLE router_db (
   hosttype char(255) default NULL,
   authset char(255) default NULL,
   arch_method char(255) default NULL,
-  archived_now int(11) default NULL,
+  archived_now int(11) default 0,
   last_archived datetime,
-  failed_archivizations int(11)
+  failed_archivizations int(11) default 0
 ) TYPE=MyISAM;
 
 

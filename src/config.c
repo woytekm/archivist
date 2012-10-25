@@ -337,7 +337,8 @@ void a_parse_config_info
     /* auto-adding log marking cronjob: if logging enabled - insert marker into logfile each 12 hours */
     a_debug_info2(DEBUGLVL5,"a_parse_config_info: auto-adding log-marker cronjob...");
     strcpy(cron_job,"00 00,12 * * * log-marker");
-    G_cronjobs[G_jobcount] = (cronjob_t *)a_job_parse(cron_job,&G_jobcount); 
+    if( (G_cronjobs[G_jobcount+1] = (cronjob_t *)a_job_parse(cron_job)) != NULL)
+     G_jobcount++; 
    }
 
   if(G_config_dump_memstats)
@@ -345,7 +346,8 @@ void a_parse_config_info
     /* if configured - add memory stats dump every 24h  */
     a_debug_info2(DEBUGLVL5,"a_parse_config_info: auto-adding dump-memstats cronjob...");
     strcpy(cron_job,"01 00 * * * dump-memstats");
-    G_cronjobs[G_jobcount] = (cronjob_t *)a_job_parse(cron_job,&G_jobcount);
+    if( (G_cronjobs[G_jobcount+1] = (cronjob_t *)a_job_parse(cron_job)) != NULL)
+     G_jobcount++;
    }
 
 
@@ -354,7 +356,9 @@ void a_parse_config_info
 
   a_debug_info2(DEBUGLVL5,"a_parse_config_info: auto-adding timestamp-updating cronjob...");
   strcpy(cron_job,"* * * * * update-timestamp");
-  G_cronjobs[G_jobcount] = (cronjob_t *)a_job_parse(cron_job,&G_jobcount);
+  
+  if( (G_cronjobs[G_jobcount+1] = (cronjob_t *)a_job_parse(cron_job)) != NULL)
+   G_jobcount++;
 
   MYSQL_RES *raw_archivist_config;
   MYSQL_ROW archivist_config;
@@ -418,6 +422,8 @@ void a_parse_config_info
   /* we have MYSQL connection info now - connect to the database, 
    * and read rest of the configuration from there */
 
+  a_debug_info2(DEBUGLVL3,"a_parse_config_info: trying to connect to MYSQL db...");
+
   a_mysql_connect();
 
  
@@ -427,11 +433,16 @@ void a_parse_config_info
   raw_archivist_config = a_mysql_select(config_query);
   archivist_config = mysql_fetch_row(raw_archivist_config);
 
-  if(mysql_num_rows(archivist_config) != 1) /* there should be exactly one row of config per instance */
+  if((mysql_num_rows(raw_archivist_config) != 1) /* there should be exactly one row of config per instance */
+     || (mysql_num_fields(raw_archivist_config) != DB_CONF_FIELDS))
   {
-   printf("FATAL: a_parse_config_info: no config data for instance %d!\n",conf_struct->instance_id);
+   printf("FATAL: a_parse_config_info: bad or nonexistent config data for instance %d!\n",
+           conf_struct->instance_id);
    a_cleanup_and_exit();
   }
+
+  a_debug_info2(DEBUGLVL3,
+                "a_parse_config_info: MYSQL connection and select successful, reading config data...");
 
   /* working_dir */
   if( (strlen(archivist_config[1]) > 0) && (strlen(archivist_config[1]) < MAXPATH) ) 
@@ -458,13 +469,13 @@ void a_parse_config_info
    }
   else a_config_error("ArchivingMethod");
  
-  /* TFTP directory */
-  if( (strlen(archivist_config[5]) > 0) && (strlen(archivist_config[5]) < MAXPATH) )
+  /* TFTP directory (optional)*/
+  if((strlen(archivist_config[5]) < MAXPATH))
    strcpy(conf_struct->tftp_dir,archivist_config[5]);
   else a_config_error("TFTPDir");
  
   /* TFTP server IP */
-  if(strlen(archivist_config[6]) > 0)
+  if(a_is_valid_ip(archivist_config[6]))
    strcpy(conf_struct->tftp_ip,archivist_config[6]);
 
   /* path to helper scripts directory */
@@ -569,8 +580,11 @@ void a_parse_config_info
      snprintf(data,1024,"%s %s %s %s %s %s",
               archivist_config[0],archivist_config[1],archivist_config[2],
               archivist_config[3],archivist_config[4],archivist_config[5]);
-     if(G_cronjobs[G_jobcount] = (cronjob_t *)a_job_parse(data,&G_jobcount) != NULL)
-      a_debug_info2(DEBUGLVL5,"a_parse_config_info: adding cron job from SQL database (%s)",data);
+     if(G_cronjobs[G_jobcount+1] = (cronjob_t *)a_job_parse(data) != NULL)
+      { 
+       G_jobcount++;
+       a_debug_info2(DEBUGLVL5,"a_parse_config_info: adding cron job from SQL database (%s)",data);
+      }
     }
 
 
@@ -593,8 +607,11 @@ void a_parse_config_info
 
           a_debug_info2(DEBUGLVL5,"a_parse_config_info: passing %s to a_job_parse",cron_job);
 
-          if((G_cronjobs[G_jobcount] = (cronjob_t *)a_job_parse(cron_job,&G_jobcount)) != NULL)
-           a_debug_info2(DEBUGLVL5,"a_parse_config_info: G_jobcount now: %d",G_jobcount);
+          if((G_cronjobs[G_jobcount+1] = (cronjob_t *)a_job_parse(cron_job)) != NULL)
+           {
+            G_jobcount++;
+            a_debug_info2(DEBUGLVL5,"a_parse_config_info: G_jobcount now: %d",G_jobcount);
+           }
          }
 
     if(strstr(conf_field,"InstanceID"))
@@ -1012,7 +1029,7 @@ int a_is_archived_now
    char *sql_query_string;
    int retval;
 
-   sql_query_string = malloc(1024);
+   sql_query_string = malloc(MAXQUERY);
    snprintf(sql_query_string,MAXQUERY,"select archived_now from router_db where hostname = '%s'",hostname);
 
    if(raw_sql_res = a_mysql_select(sql_query_string))

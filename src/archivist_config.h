@@ -40,9 +40,15 @@
 #define DEFAULT_CONF_CMDSOCK "/tmp/archivist.sock"
 #define DEFAULT_CONF_LISTEN_CMDSOCK YES
 
+#ifdef USE_MYSQL
+
 #define ARCHIVIST_MYSQL_USER "root"
 #define ARCHIVIST_MYSQL_PASSWORD "mysecret" 
 #define ARCHIVIST_MYSQL_SERVER "127.0.0.1"
+
+#define DB_CONF_FIELDS 21
+
+#endif
 
 #ifndef MAXPATH
 #define MAXPATH 4096
