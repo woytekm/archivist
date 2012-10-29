@@ -40,6 +40,12 @@
 #include <stdio.h>
 #include <time.h>
 
+#ifdef LINUX
+
+#include <sys/un.h>
+
+#endif
+
 #ifdef __FreeBSD__
 
 #include <kvm.h>

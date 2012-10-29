@@ -74,16 +74,19 @@ MYSQL_RES *a_mysql_select
    {
     a_debug_info2(DEBUGLVL3,"a_mysql_select: MYSQL error %u: %s\n", 
                   mysql_errno(G_db_connection), mysql_error(G_db_connection));
-                  pthread_mutex_unlock(&G_SQL_query_mutex);
+    pthread_mutex_unlock(&G_SQL_query_mutex);
     return NULL;
    }
 
   if( (sql_data =  mysql_store_result(G_db_connection)) == NULL)
-   a_debug_info2(DEBUGLVL3,"a_mysql_select: MYSQL error %u: %s\n", 
+   {
+    a_debug_info2(DEBUGLVL3,"a_mysql_select: MYSQL error %u: %s\n", 
                  mysql_errno(G_db_connection), mysql_error(G_db_connection));
+    pthread_mutex_unlock(&G_SQL_query_mutex);
+    return NULL;
+   }
 
   pthread_mutex_unlock(&G_SQL_query_mutex);
-  
   return sql_data;
 }
 

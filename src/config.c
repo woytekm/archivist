@@ -415,7 +415,7 @@ void a_parse_config_info
   if( (strlen(conf_struct->mysql_server) < 1) || (strlen(conf_struct->mysql_user) < 1) ||
       (strlen(conf_struct->mysql_password) < 1) ) /* MYSQL server info is not complete */
    {
-    printf("FATAL: a_parse_config_info: archivist.conf does not contain sufficient MYSQL connection info!\n");
+    printf("FATAL: archivist.conf does not contain sufficient MYSQL connection info!\n");
     a_cleanup_and_exit();
    }
 
@@ -430,13 +430,18 @@ void a_parse_config_info
   snprintf(config_query,MAXQUERY,"select * from archivist_config where instance_id=%d",
            conf_struct->instance_id);
 
-  raw_archivist_config = a_mysql_select(config_query);
+  if( (raw_archivist_config = a_mysql_select(config_query)) == NULL )
+   {
+    printf("FATAL: error reading config info from MSQL database!\n");
+    a_cleanup_and_exit();
+   }
+
   archivist_config = mysql_fetch_row(raw_archivist_config);
 
   if((mysql_num_rows(raw_archivist_config) != 1) /* there should be exactly one row of config per instance */
      || (mysql_num_fields(raw_archivist_config) != DB_CONF_FIELDS))
   {
-   printf("FATAL: a_parse_config_info: bad or nonexistent config data for instance %d!\n",
+   printf("FATAL: bad or nonexistent config data for instance %d!\n",
            conf_struct->instance_id);
    a_cleanup_and_exit();
   }
@@ -622,7 +627,7 @@ void a_parse_config_info
            conf_struct->instance_id = tmp1;  
           else
            {
-            printf("FATAL: a_parse_config_info: instance number is not in 1 - 16 range!\n");
+            printf("FATAL: InstanceID is not in 1 - 16 range!\n");
             a_cleanup_and_exit();
            }
          }

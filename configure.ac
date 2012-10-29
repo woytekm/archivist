@@ -1,5 +1,3 @@
-sinclude(m4/ax_python_devel.m4)
-
 AC_INIT([archivist], m4_esyscmd([./version.sh | tr -d '\n']), [woytekm@gmail.com])
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 AC_PROG_CC
