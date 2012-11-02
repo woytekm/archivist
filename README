@@ -1,3 +1,5 @@
+1. GENERAL INFO
+
 Archivist - a network device config archiver / versioner using Subversion repository
 
 Archivist can archive and version text configuration files from any snmp/telnet/ssh enabled
@@ -17,17 +19,27 @@ SVN is done "as" username from router login).
 Archivist owns big credit to Rancid - similiar router config archiving tool written in Perl 
 (more info about rancid at: http://www.shrubbery.net/rancid/)
 
+
+2. INSTALLATION
+
+To create "configure" script, first run ./autogen.sh
+
+Options to configure script:
+
+--enable-mysql - this will disable file-based router.db and logging, and will enable MYSQL-based 
+router.db and logging. MYSQL-driven archivist will eventually get some kind od web interface to manage
+system configuration, browse device configs and device config changelogs, but for now it's a work-in-progress
+with no means to access config or logs stored in the database.
+
 To compile, you must have the following libraries installed:
 
- - python - C development environment (libpython.so)
+ - python - C development environment (libpython.so) 
  - pthreads library
- - subversion (at least 1.6)
- - Apache Portable Runtime (it's needed to compile subversion, so it should 
-                            already be installed in the previous step)
+ - subversion (at least 1.6) 
+ - apache portable runtime (it's needed to compile subversion, so it should 
+                            already be installed in the previous step) 
  - net-snmp development environment
- - mysql development libraries (if you'll enable MYSQL storage for device DB,logs, and configuration data)
-
-To create "configure" script, first run autoreconf -iv
+ - mysql development libraries (if you'll enable MYSQL storage)
 
 Requirements to run:
 
@@ -37,11 +49,10 @@ Requirements to run:
    (use "svnadmin create <path>" command to create empty SVN repository)
    Default SVN path is /usr/local/archivist-svn
 
-
 Basic steps to configure (after ./configure; make; make install):
 
  - to configure your archivization system, you need to edit /usr/local/etc/archivist.conf
-   In the config file, specify location of the router.db,svn repository, archiving method,
+   In the config file, specify location of the router.db, svn repository, archiving method,
    and - if you want to use internal config download method - at least one authentication set
    (login/password for device access). if you want to use Rancid for config download - you
    must have complete rancid installation, and valid .cloginrc file. Rancid is used here only to
@@ -67,7 +78,8 @@ Basic steps to configure (after ./configure; make; make install):
    directly to Archivist via UDP, or send syslog to a syslog server which is logging messages to a logfile 
    that Archivist is told (and able) to tail. 
 
-To test if it works:
+
+3. HOW TO TEST IT
 
  - if you only want to make scheduled config backups - edit config file, add:
 
@@ -83,9 +95,9 @@ To test if it works:
    Then you must enter router configuration mode, and add some line to config 
    (ie. snmp-server chassis-id <somestring>  - if you don't use this for something in your network ),
    exit configuration mode, and observe Archivist log for syslog-triggered config download event logs.
-  
  
-Mirroring your SVN repostiory 
+ 
+4. SVN MIRRORING
 
 I've made the decision that Archivist will not be able to commit to many repositories. Instead - you can
 create yourself as many "secondary" repositories as you like, and synchronize them via svnsync as often
