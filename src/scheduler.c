@@ -605,7 +605,7 @@ void a_check_and_run_jobs
    time(&G_now);
 
    if(G_jobcount)
-    for(i=1;i<G_jobcount;i++)
+    for(i=1;i<=G_jobcount;i++)
      {
      if(G_cronjobs[i]->rtime <= G_now)
       {
