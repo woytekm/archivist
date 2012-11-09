@@ -43,6 +43,7 @@ To compile, you must have the following libraries installed:
 
 Requirements to run:
 
+ - working ssh client and (or) telnet binaries for internal config get method
  - working Tcl expect binary for internal config get method
  - working Rancid install for rancid config get method
  - empty SVN repository created locally (URL of file://<local repository path>)
@@ -64,10 +65,12 @@ Basic steps to configure (after ./configure; make; make install):
    device_group allows for one-level directory tree in SVN (devices can be divided into some directories).
    device group field can be set to "none" for no device groupping.
 
-   regarding supported device_platform names - currently only cisco (IOS standart), cat5 (CatOS),
+   regarding supported device_platform names: currently only cisco (IOS standart), cat5 (CatOS),
    mlx (Foundry/Brocade Net Iron MLX), and junos (Juniper JUNOS) are supported out of the box. 
    for other devices - appropriate expect scripts must be created. 
    (see README file in the "helpers" directory).
+
+   supported connection methods are: telnet, ssh1 (ssh v1), ssh2 (ssh v2), snmp (only for cisco devices)
 
  - device hostnames must resolve to valid IP's allowing telnet/ssh to connect to a particular device.
 

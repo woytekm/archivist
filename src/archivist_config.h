@@ -31,6 +31,7 @@
 #define DEFAULT_CONF_CHANGELOG NO
 #define DEFAULT_CONF_SYSLOG_PORT 514
 #define DEFAULT_CONF_SYSLOG_FILENAME "/var/log/messages"
+#define DEFAULT_CONF_HOSTNAME_FIELD_IN_SYSLOG 4
 #define DEFAULT_CONF_RANCID_PATH "/usr/local/rancid/bin/rancid"
 #define DEFAULT_CONF_SCRIPT_DIR "/usr/local/share/archivist/helpers"
 #define DEFAULT_CONF_LOCKS_DIR "/var/run"
@@ -49,6 +50,8 @@
 #define DB_CONF_FIELDS 21
 
 #endif
+
+#define IPSTRLEN 16
 
 #ifndef MAXPATH
 #define MAXPATH 4096
@@ -71,18 +74,19 @@ struct config_info_t{ int  instance_id;		/* Archivist instance ID  */
                       char log_filename[MAXPATH];   /* name of the daemon log file */
                       char archiving_method;    /* how to archive config from the devices */
                       char tftp_dir[MAXPATH];       /* location of TFTP directory (for SNMP-TFTP method) */
-                      char tftp_ip[16];         /* IP address of TFTP server used in SNMP-TFTP method */
+                      char tftp_ip[IPSTRLEN];         /* IP address of TFTP server used in SNMP-TFTP method */
                       char script_dir[MAXPATH];       /* location of internal expect scripts directory */
                       char rancid_exec_path[MAXPATH]; /* if we are using rancid to get config - where is it? */
                       char expect_exec_path[MAXPATH]; /* if we are using exepct to get config - where is it? */
                       char tail_syslog;         /* whether to tail some syslog file in search of CONFIG msgs */
                       char syslog_filename[MAXPATH]; /* name of the syslog file to tail */
+                      int  hostname_field_in_syslog; /* set number of the syslog message field which contains hostname/ip of the device */
                       char listen_syslog;        /* wheter to listen to UDP syslog in search of CONFIG msgs */
                       int  syslog_port;          /* syslog port to listen on */
                       int  keep_changelog;       /* log every diff to a changelog file */
                       char changelog_filename[MAXPATH]; /* changelog filename */
-                      char *router_db_path;         /* location of main device database - required */
-                      char *repository_path;        /* URL of the SVN repository - required */
+                      char router_db_path[MAXPATH];         /* location of main device database - required */
+                      char repository_path[MAXPATH];        /* URL of the SVN repository - required */
                       int  archiver_threads;	    /* number of concurent archiver threads */
                       struct cronjob_t *job_table[MAX_JOBS]; /* table of scheduled backup jobs */
                       int open_command_socket;      /* listen to commands on unix domain socket */

@@ -37,7 +37,7 @@ int a_mysql_connect
    {
     a_debug_info2(DEBUGLVL3,"a_mysql_connect: MYSQL connection error %u: %s\n", 
                   mysql_errno(G_db_connection), mysql_error(G_db_connection));
-    printf("FATAL: MYSQL connection error! Turn on debug (-d) for details.\n");
+    fprintf(stderr,"FATAL: MYSQL connection error! Turn on debug (-d) for details.\n");
     a_cleanup_and_exit();
    }
 
@@ -46,14 +46,14 @@ int a_mysql_connect
    {
     a_debug_info2(DEBUGLVL3,"a_mysql_connect: MYSQL connection error %u: %s\n", 
                   mysql_errno(G_db_connection), mysql_error(G_db_connection));
-    printf("FATAL: MYSQL connection error! Turn on debug (-d) for details.\n");
+    fprintf(stderr,"FATAL: MYSQL connection error! Turn on debug (-d) for details.\n");
     a_cleanup_and_exit();
    }
 
   if(mysql_select_db(G_db_connection,G_config_info.mysql_dbname))
    {
     a_debug_info2(DEBUGLVL3,"a_mysql_connect: cannot select configured MYSQL database!");
-    printf("FATAL: Cannot select configured database!\n");
+    fprintf(stderr,"FATAL: Cannot select configured database!\n");
     a_cleanup_and_exit();
    }
 

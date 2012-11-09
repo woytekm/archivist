@@ -497,7 +497,7 @@ void a_archive_single
                      router_entry->group,router_entry->hosttype,router_entry->authset,
                      router_entry->arch_method);
 
-       a_sync_device(router_entry->group,config_event_info.device_id,config_event_info.configured_by,
+       a_sync_device(router_entry->group,router_entry->hostname,config_event_info.configured_by,
                      router_entry->hosttype,router_entry->authset,router_entry->arch_method);
        
        pthread_mutex_lock(&G_router_db_mutex);

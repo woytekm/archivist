@@ -31,55 +31,6 @@
 #include "scheduler.h"
 
 
-int a_read_config_file
-(char *filename, char *conf_tab[])
-/*
-* read a config file into a table of strings
-*/
-{
-
-  FILE *fdes;
-  char buf[CONFIG_MAX_LINELEN];
-  char *workptr;
-  int conflines=0,i;
-
-  for(i=1;i<=MAX_CONF_LINES;i++) conf_tab[i] = NULL; /* nullify config table */
-
-  if( (fdes = fopen(filename, "r")) == NULL )
-   {
-    printf("FATAL: cannot open config file %s!\n",filename); 
-    return 0;
-   }
-
-  while (fgets(buf, CONFIG_MAX_LINELEN, fdes)) 
-   {
-    if (buf[0] == '#' || buf[0] == '\0' || buf[0] == '\n' || conflines >= MAX_CONF_LINES)	
-	continue;
-    conflines++;
-    buf[strlen(buf)-1] = '\0'; /* remove trailing \n */
-
-    if( (workptr = malloc(strlen(buf)+1)) == NULL )
-     {
-      printf("a_read_config_file: malloc failed!");
-      return 0;
-     }
-
-    strcpy(workptr, buf);
-    conf_tab[conflines] = workptr;
-   }
- 
-   fclose(fdes);
-  
-   for(i=1;i<=conflines;i++)
-    {
-     a_debug_info2(DEBUGLVL5,"a_read_config_file: readed line: %s ",conf_tab[i]);
-    }
-
-  return 1;
-
-}
-
-
 void a_load_config_defaults
 (struct config_info_t *conf_struct)
 /*
@@ -111,6 +62,8 @@ void a_load_config_defaults
   strcpy(conf_struct->changelog_filename,DEFAULT_CONF_CHANGELOG_FILENAME);
 
   strcpy(conf_struct->syslog_filename,DEFAULT_CONF_SYSLOG_FILENAME);
+  
+  conf_struct->hostname_field_in_syslog = DEFAULT_CONF_HOSTNAME_FIELD_IN_SYSLOG;
 
   strcpy(conf_struct->rancid_exec_path,DEFAULT_CONF_RANCID_PATH);
 
@@ -126,8 +79,8 @@ void a_load_config_defaults
   strcpy(conf_struct->mysql_dbname,DEFAULT_CONF_SQL_DBNAME);
 #endif
 
-  conf_struct->router_db_path = NULL; /* required to pick up from config file */
-  conf_struct->repository_path = NULL; /* required to pick up from config file */
+  conf_struct->router_db_path[0] = 0x0; /* required to pick up from config file */
+  conf_struct->repository_path[0] = 0x0; /* required to pick up from config file */
 }
 
 
@@ -157,12 +110,12 @@ struct auth_set_t *a_auth_set_add
     (password1_tmp == NULL)) /* auth set must contain at least login and one password */
 
     {
-     a_debug_info2(DEBUGLVL3,"auth_set_add: incomplete auth set found in config file!");
-     a_logmsg("auth_set_add: incomplete auth set found in config file!");
+     a_debug_info2(DEBUGLVL3,"a_auth_set_add: incomplete auth set found in config file!");
+     fprintf(stderr,"WARNING:incomplete auth set %s found in config file!\n",set_name_tmp);
      return prev;
     }
 
- a_debug_info2(DEBUGLVL5,"auth_set_add: new auth_set %s.",set_name_tmp);
+ a_debug_info2(DEBUGLVL5,"a_auth_set_add: new auth_set %s.",set_name_tmp);
 
  if( (workptr->set_name = malloc(strlen(set_name_tmp)+1)) == NULL)
   goto malloc_fail;
@@ -190,10 +143,9 @@ struct auth_set_t *a_auth_set_add
  return (struct auth_set_t *)workptr;
 
  malloc_fail:
-  a_debug_info2(DEBUGLVL3,"auth_set_add: malloc failed!");
-  a_logmsg("auth_set_add: malloc failed!");
+  a_debug_info2(DEBUGLVL3,"a_auth_set_add: malloc failed!");
+  fprintf(stderr,"a_auth_set_add: malloc failed!\n");
   return prev;
-
 
 }
 
@@ -215,8 +167,8 @@ struct config_regexp_t *a_config_regexp_add
 
   if((regexp_string == NULL) || (username_token == NULL))
    {
-    a_debug_info2(DEBUGLVL3,"config_regexp_add: incomplete entry found in config file!");
-    a_logmsg("incomplete ConfigRegexp entry found in config file!");
+    a_debug_info2(DEBUGLVL3,"a_config_regexp_add: incomplete entry found in config file!");
+    fprintf(stderr,"WARNING:incomplete ConfigRegexp entry found in config file!\n");
     return prev;
    }
 
@@ -230,7 +182,7 @@ struct config_regexp_t *a_config_regexp_add
 
   workptr->prev = prev;
 
-  a_debug_info2(DEBUGLVL3,"config_regexp_add: regexp: \'%s\' with username token: \'%s\'",
+  a_debug_info2(DEBUGLVL3,"a_config_regexp_add: regexp: \'%s\' with username token: \'%s\'",
                 workptr->config_regexp_string,
 
   workptr->username_field_token);
@@ -239,7 +191,7 @@ struct config_regexp_t *a_config_regexp_add
 
   malloc_fail:
    a_debug_info2(DEBUGLVL3,"a_config_regexp_add: malloc failed!");
-   a_logmsg("a_config_regex_add: malloc failed!");
+   fprintf(stderr,"a_config_regex_add: malloc failed!\n");
    return prev;
 
 }
@@ -311,8 +263,8 @@ struct router_db_entry_t *a_router_db_list_add
 }
 
 
-void a_parse_config_info
-(char *config_lines[], struct config_info_t *conf_struct)
+void a_load_and_parse_config_info
+(char *config_filename, struct config_info_t *conf_struct)
 /*
 *
 * parse config table and load config values into appropriate structures
@@ -326,7 +278,11 @@ void a_parse_config_info
   char auth_set_data[255];
   char config_regexp_data[255];
   char *tmp;
-  int i = 1,tmp1;
+  int i = 1,tmp1,conflines = 0;
+  
+  FILE *fdes;
+  char confline[CONFIG_MAX_LINELEN];
+
 
   time(&G_now);
 
@@ -353,6 +309,7 @@ void a_parse_config_info
 
 #ifdef USE_MYSQL
 
+  char config_query[MAXQUERY];
 
   a_debug_info2(DEBUGLVL5,"a_parse_config_info: auto-adding timestamp-updating cronjob...");
   strcpy(cron_job,"* * * * * update-timestamp");
@@ -363,39 +320,48 @@ void a_parse_config_info
   MYSQL_RES *raw_archivist_config;
   MYSQL_ROW archivist_config;
 
-  char config_query[MAXQUERY];
-
-
-  while(config_lines[i] != NULL)
+ if( (fdes = fopen(config_filename, "r")) == NULL )
    {
+    fprintf(stderr,"ERROR: cannot read program configuration from %s - exit.\n",config_filename);
+    a_cleanup_and_exit();
+   }
 
-    conf_field = (char *)strtok(config_lines[i], " ");
+ while (fgets(confline, CONFIG_MAX_LINELEN, fdes))
+  {
+    if (confline[0] == '#' || confline[0] == '\0' || confline[0] == '\n' || conflines >= MAX_CONF_LINES)
+        continue;
 
-    if(strstr(conf_field,"MYSQLServer"))
+    conflines++;
+
+    confline[strlen(confline)-1] = '\0'; /* remove trailing \n */
+
+    conf_field = (char *)strtok(confline, " ");
+
+    if(a_regexp_match(conf_field,"^mysqlserver",REGCOMP_NOCASE))
         {
          conf_field = (char *)strtok(NULL, " ");
          if(strlen(conf_field)>0)
          {strcpy(conf_struct->mysql_server,conf_field);}
         }
-    if(strstr(conf_field,"MYSQLUser"))
+    if(a_regexp_match(conf_field,"^mysqluser",REGCOMP_NOCASE))
         {
          conf_field = (char *)strtok(NULL, " ");
          if(strlen(conf_field)>0)
         {strcpy(conf_struct->mysql_user,conf_field);}
         }
-    if(strstr(conf_field,"MYSQLPassword"))
+    if(a_regexp_match(conf_field,"^mysqlpassword",REGCOMP_NOCASE))
         {
          conf_field = (char *)strtok(NULL, " ");
          if(strlen(conf_field)>0)
          {strcpy(conf_struct->mysql_password,conf_field);}
         }
-   if(strstr(conf_field,"MYSQLDBName"))
+   if(a_regexp_match(conf_field,"^mysqldbname",REGCOMP_NOCASE))
         {
          conf_field = (char *)strtok(NULL, " ");
          if(strlen(conf_field)>0)
          {strcpy(conf_struct->mysql_dbname,conf_field);}
         }
-    if(strstr(conf_field,"InstanceID"))
+    if(a_regexp_match(conf_field,"^instanceid",REGCOMP_NOCASE))
         {
          conf_field = (char *)strtok(NULL, " ");
          tmp1 = atoi(conf_field);
@@ -403,7 +369,7 @@ void a_parse_config_info
           conf_struct->instance_id = tmp1;
          else
           {
-           printf("FATAL: a_parse_config_info: instance number is not in 1 - 16 range!\n");
+           fprintf(stderr,"FATAL: a_parse_config_info: instance number is not in 1 - 16 range!\n");
            a_cleanup_and_exit();
           }
         }
@@ -415,7 +381,7 @@ void a_parse_config_info
   if( (strlen(conf_struct->mysql_server) < 1) || (strlen(conf_struct->mysql_user) < 1) ||
       (strlen(conf_struct->mysql_password) < 1) ) /* MYSQL server info is not complete */
    {
-    printf("FATAL: archivist.conf does not contain sufficient MYSQL connection info!\n");
+    fprintf(stderr,"FATAL: archivist.conf does not contain sufficient MYSQL connection info!\n");
     a_cleanup_and_exit();
    }
 
@@ -432,7 +398,7 @@ void a_parse_config_info
 
   if( (raw_archivist_config = a_mysql_select(config_query)) == NULL )
    {
-    printf("FATAL: error reading config info from MSQL database!\n");
+    fprintf(stderr,"FATAL: error reading config info from MSQL database!\n");
     a_cleanup_and_exit();
    }
 
@@ -441,7 +407,7 @@ void a_parse_config_info
   if((mysql_num_rows(raw_archivist_config) != 1) /* there should be exactly one row of config per instance */
      || (mysql_num_fields(raw_archivist_config) != DB_CONF_FIELDS))
   {
-   printf("FATAL: bad or nonexistent config data for instance %d!\n",
+   fprintf(stderr,"FATAL: bad or nonexistent config data for instance %d!\n",
            conf_struct->instance_id);
    a_cleanup_and_exit();
   }
@@ -594,13 +560,26 @@ void a_parse_config_info
 
 
 #else
+  /* we are not using MYSQL - read config from archivist.conf file */
 
-  while(config_lines[i]!=NULL)
+  if( (fdes = fopen(config_filename, "r")) == NULL )
    {
+    fprintf(stderr,"ERROR: cannot read program configuration from %s - exit.\n",config_filename);
+    a_cleanup_and_exit();
+   }
 
-    conf_field = (char *)strtok(config_lines[i], " ");
+ while (fgets(confline, CONFIG_MAX_LINELEN, fdes))
+   {
+    if (confline[0] == '#' || confline[0] == '\0' || confline[0] == '\n' || conflines >= MAX_CONF_LINES)
+        continue;
 
-    if(strstr(conf_field,"ScheduleBackup")) 
+    conflines++;
+
+    confline[strlen(confline)-1] = '\0'; /* remove trailing \n */
+   
+    conf_field = (char *)strtok(confline, " ");
+   
+    if(a_regexp_match(conf_field,"^schedulebackup",REGCOMP_NOCASE)) 
          {
           bzero(cron_job,254);
 
@@ -619,7 +598,7 @@ void a_parse_config_info
            }
          }
 
-    if(strstr(conf_field,"InstanceID"))
+    if(a_regexp_match(conf_field,"^instanceid",REGCOMP_NOCASE))
          {
           conf_field = (char *)strtok(NULL, " ");
           tmp1 = atoi(conf_field);
@@ -627,12 +606,12 @@ void a_parse_config_info
            conf_struct->instance_id = tmp1;  
           else
            {
-            printf("FATAL: InstanceID is not in 1 - 16 range!\n");
+            fprintf(stderr,"ERROR: InstanceID is not in 1 - 16 range!\n");
             a_cleanup_and_exit();
            }
          }
 
-    if(strstr(conf_field,"WorkingDirectory"))
+    if(a_regexp_match(conf_field,"^workingdirectory",REGCOMP_NOCASE))
          {
           conf_field = (char *)strtok(NULL, " ");
           if( (strlen(conf_field) > 0) && (strlen(conf_field) < MAXPATH) )
@@ -641,7 +620,7 @@ void a_parse_config_info
            a_config_error("WorkingDirectory");
          }
 
-    if(strstr(conf_field,"Logging")) 
+    if(a_regexp_match(conf_field,"^logging",REGCOMP_NOCASE)) 
          {
           conf_field = (char *)strtok(NULL, " ");
           tmp1 = atoi(conf_field);
@@ -651,7 +630,7 @@ void a_parse_config_info
            a_config_error("Logging");
          }
 
-    if(strstr(conf_field,"LogFile")) 
+    if(a_regexp_match(conf_field,"^logfile",REGCOMP_NOCASE)) 
          {
           conf_field = (char *)strtok(NULL, " ");
           if( (strlen(conf_field) > 0) && (strlen(conf_field) < MAXPATH) )
@@ -660,19 +639,18 @@ void a_parse_config_info
            a_config_error("LogFile");
          }
 
-    if(strstr(conf_field,"RepositoryPath")) 
+    if(a_regexp_match(conf_field,"^repositorypath",REGCOMP_NOCASE)) 
          {
           conf_field = (char *)strtok(NULL, " ");
           if( (strlen(conf_field) > 0) && (strlen(conf_field) < MAXPATH) )
            {
-            conf_struct->repository_path = malloc((strlen(conf_field))+1);
             strcpy(conf_struct->repository_path,conf_field);
            }
           else 
            a_config_error("RepositoryPath");
          }
 
-    if(strstr(conf_field,"TailSyslogFile")) 
+    if(a_regexp_match(conf_field,"^tailsyslogfile",REGCOMP_NOCASE)) 
          {
           conf_field = (char *)strtok(NULL, " ");
           tmp1 = atoi(conf_field);
@@ -682,7 +660,7 @@ void a_parse_config_info
            a_config_error("TailSyslogFile");
          }
 
-    if(strstr(conf_field,"TailFilename")) 
+    if(a_regexp_match(conf_field,"^tailfilename",REGCOMP_NOCASE)) 
          {
           conf_field = (char *)strtok(NULL, " ");
           if( (strlen(conf_field) > 0) && (strlen(conf_field) < MAXPATH) )
@@ -691,7 +669,7 @@ void a_parse_config_info
            a_config_error("TailFilename");
          }
 
-    if(strstr(conf_field,"KeepChangelog"))
+    if(a_regexp_match(conf_field,"^keepchangelog",REGCOMP_NOCASE))
          {
           conf_field = (char *)strtok(NULL, " ");
           tmp1 = atoi(conf_field);
@@ -701,7 +679,7 @@ void a_parse_config_info
            a_config_error("KeepChangelog");
          }
 
-    if(strstr(conf_field,"ChangelogFile"))
+    if(a_regexp_match(conf_field,"^changelogfile",REGCOMP_NOCASE))
          {
           conf_field = (char *)strtok(NULL, " ");
           if( (strlen(conf_field) > 0) && (strlen(conf_field) < MAXPATH) )
@@ -709,7 +687,7 @@ void a_parse_config_info
           else
            a_config_error("ChangelogFile");
          }
-    if(strstr(conf_field,"ListenSyslog")) 
+    if(a_regexp_match(conf_field,"^listensyslog",REGCOMP_NOCASE)) 
          {
           conf_field = (char *)strtok(NULL, " ");
           tmp1 = atoi(conf_field);
@@ -719,7 +697,7 @@ void a_parse_config_info
            a_config_error("ListenSyslog");
          }
 
-    if(strstr(conf_field,"ListenCommands"))
+    if(a_regexp_match(conf_field,"^listencommands",REGCOMP_NOCASE))
          {
           conf_field = (char *)strtok(NULL, " ");
           tmp1 = atoi(conf_field);
@@ -729,7 +707,7 @@ void a_parse_config_info
            a_config_error("ListenComands");
          }
 
-    if(strstr(conf_field,"SyslogPort")) 
+    if(a_regexp_match(conf_field,"^syslogport",REGCOMP_NOCASE)) 
          {
           conf_field = (char *)strtok(NULL, " ");
           tmp1 = atoi(conf_field);
@@ -739,7 +717,7 @@ void a_parse_config_info
            a_config_error("SyslogPort");
          }
 
-     if(strstr(conf_field,"ArchiverThreads"))
+     if(a_regexp_match(conf_field,"^archiverthreads",REGCOMP_NOCASE))
          {
           conf_field = (char *)strtok(NULL, " ");
           tmp1 = atoi(conf_field);
@@ -750,7 +728,7 @@ void a_parse_config_info
            a_config_error("ArchiverThreads");
          }
 
-    if(strstr(conf_field,"RancidExecPath"))
+    if(a_regexp_match(conf_field,"^rancidexecpath",REGCOMP_NOCASE))
          {
           conf_field = (char *)strtok(NULL, " ");
           if( (strlen(conf_field) > 0) && (strlen(conf_field) < MAXPATH) )
@@ -758,7 +736,7 @@ void a_parse_config_info
           else a_config_error("RancidExecPath");
          }
 
-    if(strstr(conf_field,"ExpectExecPath"))
+    if(a_regexp_match(conf_field,"^expectexecpath",REGCOMP_NOCASE))
          {
           conf_field = (char *)strtok(NULL, " ");
           if( (strlen(conf_field) > 0) && (strlen(conf_field) < MAXPATH) )
@@ -766,40 +744,39 @@ void a_parse_config_info
           else a_config_error("ExpectExecPath");
          }
 
-    if(strstr(conf_field,"RouterDBPath"))
+    if(a_regexp_match(conf_field,"^routerdbpath",REGCOMP_NOCASE))
          {
           conf_field = (char *)strtok(NULL, " ");
           if( (strlen(conf_field) > 0) && (strlen(conf_field) < MAXPATH) )
            { 
-           conf_struct->router_db_path = malloc((strlen(conf_field))+1);
            strcpy(conf_struct->router_db_path,conf_field);
            }
           else a_config_error("RouterDBPath");
          }
 
-    if(strstr(conf_field,"CommandSocketPath"))
+    if(a_regexp_match(conf_field,"^commandsocketpath",REGCOMP_NOCASE))
          {
           conf_field = (char *)strtok(NULL, " ");
           if( (strlen(conf_field) > 0) && (strlen(conf_field) < MAXPATH) )
            {
-           conf_struct->router_db_path = malloc((strlen(conf_field))+1);
            strcpy(conf_struct->command_socket_path,conf_field);
            }
           else a_config_error("CommandSocketPath");
          }
 
-    if(strstr(conf_field,"TerminalArchivingMethod"))
+    if(a_regexp_match(conf_field,"^terminalarchivingmethod",REGCOMP_NOCASE))
          {
           conf_field = (char *)strtok(NULL, " ");
           if( (strlen(conf_field) > 0) && (strlen(conf_field) < MAXPATH) )
            {
             if(strstr(conf_field,"rancid")) conf_struct->archiving_method = ARCHIVE_USING_RANCID;
-            if(strstr(conf_field,"internal")) conf_struct->archiving_method = ARCHIVE_USING_INTERNAL;
+            else if(strstr(conf_field,"internal")) conf_struct->archiving_method = ARCHIVE_USING_INTERNAL;
+            else a_config_error("TerminalArchivingMethod");
            }
           else a_config_error("TerminalArchivingMethod");
          }
 
-    if(strstr(conf_field,"InternalScripts"))
+    if(a_regexp_match(conf_field,"^internalscripts",REGCOMP_NOCASE))
         {
          conf_field = (char *)strtok(NULL, " ");
          if( (strlen(conf_field) > 0) && (strlen(conf_field) < MAXPATH) )
@@ -807,7 +784,7 @@ void a_parse_config_info
          else a_config_error("InternalScripts");
         }
 
-    if(strstr(conf_field,"TFTPDir"))
+    if(a_regexp_match(conf_field,"^tftpdir",REGCOMP_NOCASE))
         {
          conf_field = (char *)strtok(NULL, " ");
          if( (strlen(conf_field) > 0) && (strlen(conf_field) < MAXPATH) )
@@ -815,7 +792,7 @@ void a_parse_config_info
          else a_config_error("TFTPDir");
         }
 
-    if(strstr(conf_field,"TFTPIP"))
+    if(a_regexp_match(conf_field,"^tftpip",REGCOMP_NOCASE))
         {
          conf_field = (char *)strtok(NULL, " ");
          if(a_is_valid_ip(conf_field))
@@ -823,7 +800,7 @@ void a_parse_config_info
          else a_config_error("TFTPIP");
         }
 
-    if(strstr(conf_field,"AuthSet"))
+    if(a_regexp_match(conf_field,"^authset",REGCOMP_NOCASE))
         {
          bzero(auth_set_data,255);
          while( (tmp = (char *)strtok(NULL, " ")) != NULL )
@@ -834,7 +811,7 @@ void a_parse_config_info
          G_auth_set_list = a_auth_set_add(G_auth_set_list,auth_set_data);
         }
 
-    if(strstr(conf_field,"ConfigRegexp"))
+    if(a_regexp_match(conf_field,"^configregexp",REGCOMP_NOCASE))
         {
          bzero(config_regexp_data,255);
          while( (tmp = (char *)strtok(NULL, " ")) != NULL )
@@ -845,7 +822,7 @@ void a_parse_config_info
          G_config_regexp_list = a_config_regexp_add(G_config_regexp_list,config_regexp_data);
         }
 
-    if(strstr(conf_field,"EncryptedAuthSet"))
+    if(a_regexp_match(conf_field,"^encryptedauthset",REGCOMP_NOCASE))
         {
          bzero(auth_set_data,255);
          while( (tmp = (char *)strtok(NULL, " ")) != NULL )
@@ -857,6 +834,17 @@ void a_parse_config_info
          G_auth_set_list = a_auth_set_add(G_auth_set_list,auth_set_data);
         }
 
+     if(a_regexp_match(conf_field,"^sysloghostfield",REGCOMP_NOCASE))
+         {
+          conf_field = (char *)strtok(NULL, " ");
+          tmp1 = atoi(conf_field);
+          /* 256 concurrent single-device threads max. */
+          if((tmp1 > 0 || tmp1 < 256))
+           conf_struct->hostname_field_in_syslog = tmp1;
+          else
+           a_config_error("SyslogHostField");
+         }
+
     i++;
 
   }
@@ -866,16 +854,16 @@ void a_parse_config_info
    /* check for required options */
 
 #ifndef USE_MYSQL
-   if(conf_struct->router_db_path == NULL) 
+   if(!strlen(conf_struct->router_db_path)) 
     {
-     printf("FATAL: no RouterDBPath defined in config file!\n"); 
+     fprintf(stderr,"FATAL: no RouterDBPath defined in config file!\n"); 
      a_cleanup_and_exit();
     }
 #endif
 
-   if(conf_struct->repository_path == NULL) 
+   if(!strlen(conf_struct->repository_path)) 
     {
-     printf("FATAL: no RepositoryPath defined!\n"); 
+     fprintf(stderr,"FATAL: no RepositoryPath defined!\n"); 
      a_cleanup_and_exit();
     }
 
@@ -910,7 +898,7 @@ auth_set_t *a_auth_set_search
    {
     strstr_out = strstr(tmp_pointer->set_name,setname);
     if(strstr_out != NULL)
-     if(strlen(strstr_out) == strlen(setname))
+     if(strlen(tmp_pointer->set_name) == strlen(setname))
       {
        return tmp_pointer; /* found entry - return address of struct */
       }
@@ -1143,7 +1131,8 @@ struct router_db_entry_t *a_load_router_db
 
   struct router_db_entry_t *router_db_idx=NULL; /* initialize first entry with null */
   char buf[CONFIG_MAX_LINELEN];
-  int fdes,counter = 0;
+  int counter = 0;
+  FILE *fdes;
 
   G_router_db_entries = 0;
 

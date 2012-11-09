@@ -46,14 +46,15 @@ FILE *a_syslog_fstream_setup
 */
 {
   int fsize;
-  int fdesc;
+  FILE *fdesc;
 
   fdesc = open(G_config_info.syslog_filename,O_RDONLY);
 
-  if(fdesc == NULL)
+  if(fdesc == -1)
    {
-    a_debug_info2(DEBUGLVL3,"a_syslog_fstream_setup: error opening syslog file for tailing!");
-    exit(1);
+    fprintf(stderr,"FATAL: error opening syslog file %s for tailing (%d)!\n",G_config_info.syslog_filename,errno);
+    a_debug_info2(DEBUGLVL3,"a_syslog_fstream_setup: cannot open syslog file (%d)!",errno);
+    a_cleanup_and_exit();
    }
 
   fsize = a_filesize(fdesc);

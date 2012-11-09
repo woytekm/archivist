@@ -47,8 +47,8 @@ int a_syslog_socket_setup
 
        if ((syslog_socket=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP))==-1)
         {
-         a_debug_info2(DEBUGLVL3,"a_syslog_socket_setup: cannot create UDP socket !"); 
-         exit(1);
+         fprintf(stderr,"a_syslog_socket_setup: cannot create UDP socket (%d)!",errno); 
+         a_cleanup_and_exit();
         }
 
        memset((char *) &si_me, 0, sizeof(si_me));
@@ -57,9 +57,9 @@ int a_syslog_socket_setup
        si_me.sin_addr.s_addr = htonl(INADDR_ANY);
        if (bind(syslog_socket,(struct sockaddr *)&si_me, sizeof(si_me))==-1)
         {
-         printf("FATAL: a_syslog_socket_setup: cannot bind to UDP socket (%d)!",
-                       G_config_info.syslog_port); 
-         exit(1);
+         fprintf(stderr,"FATAL: a_syslog_socket_setup: cannot bind to UDP socket on port %d (%d)!",
+                       G_config_info.syslog_port,errno); 
+         a_cleanup_and_exit();
         }
        
        fcntl(syslog_socket, F_SETFL, flags | O_NONBLOCK);
@@ -82,7 +82,7 @@ int a_check_syslog_stream
 {
       struct sockaddr_in si_other;
       char wrkbuf[1024];
-      int i,slen=sizeof(si_other),recv_flags=0,buflen;
+      int i,slen=sizeof(si_other),recv_flags=0;
       struct hostent *hostnam;
       char *regexp_test;
       int readed=1024,finished=0,received_data_len=0;
@@ -91,7 +91,7 @@ int a_check_syslog_stream
        return 1;   /* program is in the state of cleanup&exit - just return. */
 
       bzero(buf,BUFLEN);
-      bzero(from,IPADDRLEN);
+      bzero(from,IPSTRLEN);
  
       while(!finished) {
 
@@ -115,14 +115,14 @@ int a_check_syslog_stream
        if(received_data_len>0)
         {
          a_debug_info2(DEBUGLVL5,"a_check_syslog_stream: readed %d bytes from network",received_data_len);
-         regexp_test = a_config_regexp_match(buf); /* pre-filtering of syslog messages */
+         regexp_test = (char *)a_config_regexp_match(buf); /* pre-filtering of syslog messages */
 
          if(regexp_test != NULL)
            {
             hostnam = gethostbyaddr(&si_other.sin_addr,4,AF_INET);
             strcat(from,hostnam->h_name); 
             a_debug_info2(DEBUGLVL5,"a_check_syslog_stream: got something !");
-            return buflen;
+            return received_data_len;
            } 
         }
 
@@ -149,7 +149,7 @@ a_parse_syslog_buffer
     strncpy(localcopy,syslog_message,BUFLEN);
 
     strtok_pointer = (char *)strtok(localcopy,"\n");
-    regexp_test = a_config_regexp_match(strtok_pointer);
+    regexp_test = (char *)a_config_regexp_match(strtok_pointer);
 
      if( (strtok_pointer != NULL) && (regexp_test != NULL) )
       {
@@ -160,7 +160,7 @@ a_parse_syslog_buffer
     while(strtok_pointer != NULL)
      {
       strtok_pointer = (char *)strtok(NULL,"\n");
-      regexp_test = a_config_regexp_match(strtok_pointer);
+      regexp_test = (char *)a_config_regexp_match(strtok_pointer);
       if( (strtok_pointer != NULL) && (regexp_test != NULL) ) 
        {
         username_token = regexp_test;
@@ -181,15 +181,15 @@ a_parse_config_event
 {
 
     char *strtok_pointer;
-    char src_ip_from_taillog[IPADDRLEN];
+    char src_ip_from_taillog[IPSTRLEN];
     int field_counter = 1;
     config_event_info_t *conf_event_info;
 
     conf_event_info = malloc(sizeof(config_event_info_t));
 
-    conf_event_info->configured_by[0] = NULL;
-    conf_event_info->configured_on[0] = NULL;
-    conf_event_info->configured_from[0] = NULL;
+    conf_event_info->configured_by[0] = 0x0;
+    conf_event_info->configured_on[0] = 0x0;
+    conf_event_info->configured_from[0] = 0x0;
 
     a_debug_info2(DEBUGLVL5,"a_parse_config_event: allocated new data structure at 0x%p",conf_event_info);
 
@@ -218,7 +218,7 @@ a_parse_config_event
 
       field_counter++;
 
-      if((field_counter == HOSTNAME_FIELD_IN_SYSLOG)&&(src_ip == NULL))  /* this is a line from tailing syslog file */
+      if((field_counter == G_config_info.hostname_field_in_syslog)&&(src_ip == NULL))  /* this is a line from tailing syslog file */
        { 						                 /* get source address/name from predefined field  */
         strcpy(src_ip_from_taillog,strtok_pointer); 
        }                 

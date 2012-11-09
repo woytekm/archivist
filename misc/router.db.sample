@@ -1,6 +1,6 @@
 router1:cisco:set04:snmp
 router2:cisco:set02:telnet
-router3:cisco:set03:ssh
+router3:cisco:set03:ssh1
 mainswitch:cisco:set04:snmp
 sw_floor1:cisco:set04:snmp
 sw_floor2:cisco:set04:snmp

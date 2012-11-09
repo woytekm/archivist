@@ -309,6 +309,10 @@ void a_cleanup_and_exit
     fclose(G_logfile_handle);
    if(G_syslog_file_handle != NULL)
     close(G_syslog_file_handle);
+   if(G_command_socket != NULL)
+    close(G_command_socket);
+  if(G_syslog_socket != NULL)
+    close(G_syslog_socket);
 
 #ifdef USE_MYSQL
    mysql_close(G_db_connection);
@@ -400,7 +404,7 @@ int a_is_valid_ip(const char *ip_str)
 */
 {
 
- if(a_regexp_match(ip_str,"^[1-9]{1}[0-9]{0,2}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$"))
+ if(a_regexp_match(ip_str,"^[1-9]{1}[0-9]{0,2}\\.[0-9]{1,3}\\.[0-9]{1,3}\\.[0-9]{1,3}$",REGCOMP_NOCASE))
   return 1;
  return 0;
 
@@ -616,9 +620,9 @@ void a_showversion
 *
 */
 {
-   printf("Archivist version %s\n",VERSION);
+   fprintf(stderr,"Archivist NDCA version %s\n",VERSION);
    #ifdef USE_MYSQL
-   printf("\(MYSQL support compiled in\)\n");
+   fprintf(stderr,"\(MYSQL support compiled in\)\n");
    #endif
 }
 
@@ -630,11 +634,11 @@ void a_showhelp
 */
 {
    a_showversion();
-   printf("Usage: ");
+   fprintf(stderr,"Usage: ");
 #ifdef USE_MYSQL
-   printf("archivist [ -v ] [ -h ] [ -d ] [ -i ] [ -m ] [ -c configfile ]\n");
+   fprintf(stderr,"archivist [ -v ] [ -h ] [ -d ] [ -i ] [ -m ] [ -c configfile ]\n");
 #else
-   printf("archivist [ -v ] [ -h ] [ -d ] [ -m ] [ -c configfile ]\n");
+   fprintf(stderr,"archivist [ -v ] [ -h ] [ -d ] [ -m ] [ -c configfile ]\n");
 #endif
 }
 
@@ -650,7 +654,7 @@ char *a_config_regexp_match
 
   for(workptr = G_config_regexp_list;workptr!=NULL;workptr=workptr->prev)
    {
-    if(a_regexp_match(syslog_buffer,workptr->config_regexp_string))
+    if(a_regexp_match(syslog_buffer,workptr->config_regexp_string,REGCOMP_CASE))
      {
       return workptr->username_field_token;
      }
@@ -660,16 +664,21 @@ char *a_config_regexp_match
 
 
 int a_regexp_match
-(const char *string, char *pattern)
+(const char *string, char *pattern, int case_sensitive)
 /*
 * regexp matching routine
 * from: http://pubs.opengroup.org/onlinepubs/009695399/functions/regcomp.html
 */
 {
-    int status;
+    int status,regcomp_flags = 0;
     regex_t re;
+    
+    if(case_sensitive) 
+     regcomp_flags = REG_EXTENDED|REG_NOSUB;
+    else
+     regcomp_flags = REG_EXTENDED|REG_NOSUB|REG_ICASE;
 
-    if(regcomp(&re, pattern, REG_EXTENDED|REG_NOSUB) != 0) 
+    if((regcomp(&re, pattern, regcomp_flags)) != 0) 
      {
       a_debug_info2(DEBUGLVL3,"a_regexp_match: Regular expression compilation error: [%s]!",pattern);
       return(0);      
@@ -942,7 +951,7 @@ void a_config_error(char *config_field)
 *
 */
 {
- printf("FATAL: data from configuration field \"%s\" is unreadable!\n(too long, too short, wrong value or nonexistent).\n",config_field);
+ fprintf(stderr,"FATAL: data from configuration field %s is unreadable!\n(too long, too short, wrong value or nonexistent).\n",config_field);
  a_cleanup_and_exit();
 }
 
@@ -1072,7 +1081,8 @@ int a_command_socket_setup(void)
  struct sockaddr_un local;
 
    if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
-      printf("ERROR: cannot create a command socket!");
+      fprintf(stderr,"ERROR: cannot create a command socket %s (%d)!",
+              G_config_info.command_socket_path,errno);
       a_cleanup_and_exit();
    }
 
@@ -1083,13 +1093,14 @@ int a_command_socket_setup(void)
    unlink(local.sun_path);
    len = strlen(local.sun_path) + sizeof(local.sun_family);
    if (bind(sock, (struct sockaddr *)&local, len) == -1) {
-        printf("ERROR: cannot bind to command socket %s!",
-                G_config_info.command_socket_path);
+        fprintf(stderr,"ERROR: cannot bind to command socket %s (%d)!",
+                G_config_info.command_socket_path,errno);
         a_cleanup_and_exit();
     }
 
    if (listen(sock, 5) == -1) {
-      printf("ERROR: listen failed on command socket!");
+      fprintf(stderr,"ERROR: listen failed on command socket %s (%d)!",
+              G_config_info.command_socket_path,errno);
       a_cleanup_and_exit();}
 
   return sock;

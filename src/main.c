@@ -40,9 +40,8 @@ main
 (int argc, char **argv)
 {
 
-   char *raw_config[MAX_CONF_LINES];
    char syslog_msgbuffer[BUFLEN];
-   char ip_from[IPADDRLEN];
+   char ip_from[IPSTRLEN];
    int pid,c;
 
    a_init_globals(); /* init global variables, mutexes, and other one-time stuff  */
@@ -97,7 +96,7 @@ main
 
    if(optind < argc) 
     { 
-     printf("ERROR: invalid non-option arguments.\n"); 
+     fprintf(stderr,"ERROR: invalid non-option arguments.\n"); 
      a_showhelp(); 
     }
 
@@ -106,60 +105,43 @@ main
    if(G_current_debug_level>0)
     a_disp_thread_stacksize();    /* if DEBUG - display OS default thread stack size */
 
-   if(G_current_debug_level == 0) /* if we are debugging - stay on the terminal - don't fork. */
-    {
-     pid = fork();                /* we aren't debugging - fork */
-       if (pid < 0)
-        {
-         /* Could not fork  */
-         exit(EXIT_FAILURE);
-        }
-       if (pid > 0)
-        {
-         /* Child created ok, so exit parent process  */
-         exit(EXIT_SUCCESS);
-        }
-    }
-
    a_refresh_signals();                                 /* install signal handlers  */
    
-   a_load_config_defaults(&G_config_info);              /* load and parse config file  */
+   a_load_config_defaults(&G_config_info);                         
 
-   if(!a_read_config_file(G_config_filename,raw_config))
-    {
-     printf("ERROR: cannot read program configuration - exit.\n");
-     a_cleanup_and_exit();
-    }
+   a_load_and_parse_config_info(G_config_filename,&G_config_info);     
 
-   a_parse_config_info(raw_config,&G_config_info);      /* (DB connection is done here) */
-
-   if(a_check_for_lockfile())                           /* lockfile check & create */
+   if(a_check_for_lockfile())                         
     { 
-     printf("\nERROR: archivist lockfile for instance %d exists!",G_config_info.instance_id); 
-     printf("\nThere may be another archivist process running!\n");
-     printf("If you are sure that this isn't the case - remove lockfile and try again...\n\n");
+     fprintf(stderr,"\nERROR: archivist lockfile for instance %d exists!",G_config_info.instance_id); 
+     fprintf(stderr,"\nThere may be another archivist process running!\n");
+     fprintf(stderr,"If you are sure that this isn't the case - remove lockfile and try again...\n\n");
      exit(-1);
     }
    else if(!a_create_lockfile()) 
     {
-     printf("ERROR: cannot create lock file!\n");
+     fprintf(stderr,"ERROR: cannot create lock file!\n");
      exit(-1);
     }
      
    if((chdir(G_config_info.working_dir) != 0))
     {
-     printf("FATAL: cannot change directory to working directory %s. exit.\n",G_config_info.working_dir);
+     fprintf(stderr,"FATAL: cannot change directory to working directory %s. exit.\n",G_config_info.working_dir);
      a_cleanup_and_exit();
     }
 
    if(a_svn_configured_repo_stat() != 1)
     {
-     printf("\nFATAL: configured SVN repository (%s) is not accessible!\n",G_config_info.repository_path);
+     fprintf(stderr,"FATAL: configured SVN repository (%s) is not accessible!\n",G_config_info.repository_path);
      a_cleanup_and_exit();
     }
 
    if( (G_config_info.logging) && (strlen(G_config_info.log_filename) > 0) )
-    G_logfile_handle = fopen(G_config_info.log_filename,"a+");
+    {
+     if( (G_logfile_handle = fopen(G_config_info.log_filename,"a+")) == NULL)
+      fprintf(stderr,"WARNING: cannot open archivist logfile %s (%d)! Will continue anyway.\n",
+              G_config_info.log_filename,errno);
+    }
 
    G_router_db = a_load_router_db(G_config_info.router_db_path); /* load device list from router.db file */
 
@@ -200,6 +182,21 @@ main
 
    if(G_config_info.open_command_socket)
     G_command_socket = a_command_socket_setup();
+
+   if(G_current_debug_level == 0) /* if we are debugging - stay on the terminal - don't fork. */
+    {
+     pid = fork();                /* we aren't debugging - fork */
+       if (pid < 0)
+        {
+         /* Could not fork  */
+         exit(EXIT_FAILURE);
+        }
+       if (pid > 0)
+        {
+         /* Child created ok, so exit parent process  */
+         exit(EXIT_SUCCESS);
+        }
+    }
 
    /* choose main loop delay value */
 

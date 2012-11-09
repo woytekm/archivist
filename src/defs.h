@@ -57,11 +57,9 @@
 
 /* various public defines */
 #define SOCK_RECVLEN 1024
-#define HOSTNAME_FIELD_IN_SYSLOG 4
 #define MAX_SYSLOG_LINE_LEN 2084
 #define BUFLEN 8192
 #define CONFIG_MAX_LINELEN 1024
-#define IPADDRLEN 40
 
 #ifndef MAXPATH
 #define MAXPATH 4096
@@ -78,6 +76,9 @@
 
 #define ARCHIVE_USING_RANCID 1
 #define ARCHIVE_USING_INTERNAL 2
+
+#define REGCOMP_CASE 1
+#define REGCOMP_NOCASE 0
 
 #define nil ((void*)0)
 
