@@ -1,0 +1,175 @@
+#
+# Archivist internal expect script
+#
+# cisco.get.ssh - method for getting configuration by SSH from a Cisco IOS device
+#
+
+set timeout 15
+
+log_user 0
+spawn ssh -1 -l [lindex $argv 1] [lindex $argv 0]
+
+expect {
+ "ssword:"
+  {
+   send "[lindex $argv 2]\r"
+  }
+ "yes/no"
+  {
+   send "yes\r"
+   expect "ssword:"
+   send "[lindex $argv 2]\r"
+  }
+ }
+
+expect {
+    ">"
+    {
+     send "en\r"
+
+     expect {
+      "ssword:"
+       {
+        send "[lindex $argv 3]\r"
+       }
+      "ame:"
+       {
+        send "[lindex $argv 1]\r"
+        expect "ssword:"
+        send "[lindex $argv 3]\r"
+       }
+      }
+
+    }
+
+    timeout
+    {
+     exit
+    }
+
+    "failed"
+    {
+     exit
+    }
+
+    "#"
+    {
+     send "\r"
+    }
+
+ }
+
+expect {
+
+      "failed"
+        {
+         exit
+        }
+
+      "ssword:"
+        {
+         exit
+        }
+
+      timeout
+        {
+         exit
+        }  
+
+      "#"
+        {
+         send "\r"
+        }
+
+  }
+
+expect {
+          "ame:"
+          {
+           exit
+          }
+
+          "ssword:"
+          {
+           exit
+          }
+
+          "failed"
+          {
+           exit
+          }
+
+         "#"
+          {
+           send "\r"
+           expect "#"
+          }
+     }
+
+
+send "term length 0\r"
+send "terminal pager 0\r"
+
+expect {
+          "ame:"
+          {
+           exit
+          }
+
+          "ssword:"
+          {
+           exit
+          }
+
+          "failed"
+          {
+           exit
+          }
+
+         "#"
+          {
+           send "\r"
+           expect "#"
+          }
+     }
+
+#check if we are _really_ logged in:
+
+send "show version\r"
+
+expect {
+          timeout
+           {
+            exit
+           }
+
+         "IOS"
+           {
+            expect "#"
+           }
+
+         "Cisco"
+           {
+            expect "#"
+           }
+
+         "FWSM"
+           {
+            expect "#"
+           }
+       }
+
+send "\r"
+expect "#"
+
+log_file -a -noappend [lindex $argv 0].new
+set timeout 30
+send "write term\r"
+#for some reason simple regex [^#]+#$ sometimes doesn't match here :(
+#so here goes "reverse" version (everything but a hash).
+expect -re {[\w\-_!$%&*()+=|:;"'@{}<>\/?.\[\]]+#$}
+log_file
+send "exit\r"
+expect "host."
+
+
