@@ -1077,7 +1077,8 @@ int a_command_socket_setup(void)
 * prepare unix domain socket on which archivist will listen for external commands
 *
 */
- int sock,len;
+ int sock;
+ socklen_t len;
  struct sockaddr_un local;
 
    if ((sock = socket(AF_UNIX, SOCK_STREAM, 0)) == -1) {
@@ -1091,7 +1092,7 @@ int a_command_socket_setup(void)
    local.sun_family = AF_UNIX;
    strcpy(local.sun_path, G_config_info.command_socket_path);
    unlink(local.sun_path);
-   len = strlen(local.sun_path) + sizeof(local.sun_family);
+   len = SUN_LEN(&local);;
    if (bind(sock, (struct sockaddr *)&local, len) == -1) {
         fprintf(stderr,"ERROR: cannot bind to command socket %s (%d)!",
                 G_config_info.command_socket_path,errno);
