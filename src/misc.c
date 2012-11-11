@@ -620,7 +620,7 @@ void a_showversion
 *
 */
 {
-   fprintf(stderr,"Archivist NDCA version %s\n",VERSION);
+   fprintf(stderr,"Archivist NDCA version %s\n",ARCHIVIST_VERSION);
    #ifdef USE_MYSQL
    fprintf(stderr,"\(MYSQL support compiled in\)\n");
    #endif
@@ -1092,7 +1092,7 @@ int a_command_socket_setup(void)
    local.sun_family = AF_UNIX;
    strcpy(local.sun_path, G_config_info.command_socket_path);
    unlink(local.sun_path);
-   len = SUN_LEN(&local);;
+   len = SUN_LEN(&local);
    if (bind(sock, (struct sockaddr *)&local, len) == -1) {
         fprintf(stderr,"ERROR: cannot bind to command socket %s (%d)!",
                 G_config_info.command_socket_path,errno);

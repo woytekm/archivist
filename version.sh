@@ -1,6 +1,13 @@
 #!/bin/sh
 
 ARCHIVIST_VERSION=`/bin/cat version`
-CURRENT=`/bin/date +%Y%m%d`
+ISCURRENT=`echo $ARCHIVIST_VERSION | grep current | wc -l`
 
-echo "$ARCHIVIST_VERSION-$CURRENT"
+if [ "$ISCURRENT" -eq 1 ]
+ then
+  CURRENT=`/bin/date +%Y%m%d`
+  echo "$ARCHIVIST_VERSION-$CURRENT"
+ else
+  echo "$ARCHIVIST_VERSION"
+ fi
+

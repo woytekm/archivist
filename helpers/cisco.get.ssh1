@@ -7,9 +7,14 @@
 set timeout 15
 
 log_user 0
+
 spawn ssh -1 -l [lindex $argv 1] [lindex $argv 0]
 
 expect {
+  eof
+  {
+   exit 1
+  }
  "ssword:"
   {
    send "[lindex $argv 2]\r"
@@ -19,6 +24,14 @@ expect {
    send "yes\r"
    expect "ssword:"
    send "[lindex $argv 2]\r"
+  }
+ default
+  {
+   exit 1
+  }
+ timeout
+  {
+   exit 1
   }
  }
 

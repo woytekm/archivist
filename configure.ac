@@ -2,6 +2,9 @@ AC_INIT([archivist], m4_esyscmd([./version.sh | tr -d '\n']), [woytekm@gmail.com
 AM_INIT_AUTOMAKE([foreign -Wall -Werror])
 AC_PROG_CC
 
+m4_define([myver], m4_esyscmd([./version.sh | tr -d '\n']))
+AC_DEFINE(ARCHIVIST_VERSION, ["myver"], [My version number])
+
 AC_ARG_ENABLE([debug],[  --enable-debug   include debug symbol information in exec], [])
 AC_ARG_ENABLE([mysql],[  --enable-mysql   enable mysql support], [])
 

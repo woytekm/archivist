@@ -498,7 +498,6 @@ void a_load_and_parse_config_info
   /* SVN repository path */
   if( (strlen(archivist_config[17]) > 0) && (strlen(archivist_config[17]) < MAXPATH) )
    {
-    conf_struct->repository_path = malloc((strlen(archivist_config[17]))+1);
     strcpy(conf_struct->repository_path,archivist_config[17]);
    }
   else a_config_error("RepositoryPath");

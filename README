@@ -52,7 +52,8 @@ Requirements to run:
 
 Basic steps to configure (after ./configure; make; make install):
 
- - to configure your archivization system, you need to edit /usr/local/etc/archivist.conf
+ - to configure your archivization system, you need to edit /usr/local/etc/archivist.conf.dist,
+   and change name of this file to archivist.conf
    In the config file, specify location of the router.db, svn repository, archiving method,
    and - if you want to use internal config download method - at least one authentication set
    (login/password for device access). if you want to use Rancid for config download - you

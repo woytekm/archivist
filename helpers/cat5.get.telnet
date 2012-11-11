@@ -9,11 +9,30 @@ set timeout 15
 log_user 0
 spawn telnet [lindex $argv 0]
 
-expect "ame:"
-send "[lindex $argv 1]\r"
-
-expect "ssword:"
-send "[lindex $argv 2]\r"
+expect {
+     "ame:"
+      {
+       send "[lindex $argv 1]\r"
+       expect "ssword:"
+       send "[lindex $argv 2]\r"
+      }
+     "ssword:"
+      {
+       send "[lindex $argv 2]\r"
+      }
+     default
+     {
+      exit 1
+     }
+     timeout
+     {
+      exit 1
+     }
+     eof
+     {
+      exit 1
+     }
+   }
 
 expect {
     ">"

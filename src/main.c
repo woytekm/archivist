@@ -33,6 +33,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "../config.h"
 #include "defs.h"
 #include "archivist_config.h"
 
@@ -100,7 +101,7 @@ main
      a_showhelp(); 
     }
 
-   a_debug_info2(DEBUGLVL1,"main: Archivist starting...");
+   a_debug_info2(DEBUGLVL1,"main: Archivist (version: %s) starting...",ARCHIVIST_VERSION);
 
    if(G_current_debug_level>0)
     a_disp_thread_stacksize();    /* if DEBUG - display OS default thread stack size */
@@ -151,6 +152,7 @@ main
    a_logmsg("Archivist - network device config archiver daemon starting (instance ID: %d).",
             G_config_info.instance_id);
  
+   a_logmsg("--> version: %s",ARCHIVIST_VERSION);
    a_logmsg("--> router.db file: %s (%d entries)",G_config_info.router_db_path,G_router_db_entries);
 
    /*if above SVN test passed - we assume that SVN is accessible - OK:*/
