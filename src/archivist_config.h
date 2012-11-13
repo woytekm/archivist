@@ -100,7 +100,7 @@ struct config_info_t{ int  instance_id;		/* Archivist instance ID  */
                   };
 
 
-/* structure holding one line of data from router.db - a single device information */
+/* structure holding one line of data from router.db - information about single device */
 
 typedef struct{ char *group;
                 char *hostname;
@@ -111,7 +111,7 @@ typedef struct{ char *group;
                 void *prev;
                }router_db_entry_t;
 
-/* authentication set consists of login name and a two passwords (secon one optional - for enable). */
+/* authentication set consists of login name and a two passwords */
 
 typedef struct{ char *set_name;
 		char *login;
@@ -121,25 +121,12 @@ typedef struct{ char *set_name;
 	      }auth_set_t;
 
 
-/* authentication set consists of login name and a two passwords (secon one optional - for enable). */
+/* config regexp consists of config regexp string and string preceding username */
 
 typedef struct{ char *config_regexp_string;
                 char *username_field_token;
                 void *prev;
               }config_regexp_t;
-
-
-/* structure defining single cron job data */
-
-struct cronjob_t{ char *min; 	        /* minute */
-	          char *hour;	        /* hour */
-	          char *dmnth;	        /* day of month */
-	          char *month;	        /* month */
-	          char *dweek;	        /* day of week */
-	          char command[255];	/* job command (all|[hostname]) */
-                  char running;           /* running job indicator */
-                  int job_id;             /* job ID */
-                 };
 
 /* structure for loading device config into a dynamic list */
 

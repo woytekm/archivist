@@ -2,6 +2,10 @@
 # Archivist config start
 #
 
+# How many worker threads should archivist use when archiving more than one device at a time
+# lowest value is at least 1, highest is 256 threads
+ArchiverThreads 20
+
 # Working directory - where daemon should create its temporary files
 WorkingDirectory /usr/local/tmp/
 
