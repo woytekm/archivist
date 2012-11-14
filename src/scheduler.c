@@ -423,8 +423,12 @@ static int a_range_parse
         *p= end;
         return 1;
   syntax:
+        a_debug_info2(DEBUGLVL3,"a_job_parse: cronjob parsing error!\n");
+        fprintf(stderr,"ScheduleBackup %s - syntax error in config line!\n",data);
         return 0;
   range:
+        a_debug_info2(DEBUGLVL3,"a_job_parse: cronjob parsing error!\n");
+        fprintf(stderr,"ScheduleBackup %s - range error in config line!\n",data);
         return 0;
 }
 
@@ -577,7 +581,7 @@ cronjob_t *a_job_parse
     
     parse_error:
      a_debug_info2(DEBUGLVL3,"a_job_parse: cronjob parsing error!\n");
-     a_logmsg("ScheduleBackup %s - config line parse error!",job_data);
+     fprintf(stderr,"ScheduleBackup %s - config line parse error!\n",job_data);
      return NULL;
 
 }

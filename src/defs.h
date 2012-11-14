@@ -131,4 +131,10 @@ extern int a_archive_bulk(void *arg);
 
 extern void a_apr_reinit(void);
 
+/* define SUN_LEN for the systems which don't have it */
+
+#ifndef SUN_LEN 
+#define SUN_LEN(ptr) ((size_t) (((struct sockaddr_un *) 0)->sun_path) + strlen((ptr)->sun_path))
+#endif
+
 /* defs.h end  */
