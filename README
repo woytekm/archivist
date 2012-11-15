@@ -53,12 +53,12 @@ Requirements to run:
 Basic steps to configure (after ./configure; make; make install):
 
  - to configure your archivization system, you need to edit /usr/local/etc/archivist.conf.dist,
-   and change name of this file to archivist.conf
+   and then change name of this file to /usr/local/etc/archivist.conf
    In the config file, specify location of the router.db, svn repository, archiving method,
    and - if you want to use internal config download method - at least one authentication set
    (login/password for device access). if you want to use Rancid for config download - you
-   must have complete rancid installation, and valid .cloginrc file. Rancid is used here only to
-   the point of getting <hostname>.new file. It is not used for SVN commit.
+   must have complete Rancid installation, and valid .cloginrc file. Rancid "bin" directory must be
+   present in the system path.
 
  - you need to create rancid-stylish router.db - database of config-versioned devices.
    Archivist router.db file format is as folows (all fields are required):
@@ -67,11 +67,12 @@ Basic steps to configure (after ./configure; make; make install):
    device group field can be set to "none" for no device groupping.
 
    regarding supported device_platform names: currently only cisco (IOS standart), cat5 (CatOS),
-   mlx (Foundry/Brocade Net Iron MLX), and junos (Juniper JUNOS) are supported out of the box. 
-   for other devices - appropriate expect scripts must be created. 
-   (see README file in the "helpers" directory).
+   mlx (Foundry/Brocade Net Iron MLX), and juniper (Juniper JUNOS) are supported out of the box. 
+   for other devices - appropriate expect scripts must be created. If you are using Rancid as config
+   download method - you can specify any device_platform that is supported by Rancid.
 
-   supported connection methods are: telnet, ssh1 (ssh v1), ssh2 (ssh v2), snmp (only for cisco devices)
+   internal config download supports following connection methods: telnet, ssh1 (ssh v1), ssh2 (ssh v2), 
+   snmp (currently only for cisco devices)
 
  - device hostnames must resolve to valid IP's allowing telnet/ssh to connect to a particular device.
 
@@ -97,10 +98,10 @@ Basic steps to configure (after ./configure; make; make install):
  - if you want to use syslog following - configure syslog following parameters (tail file or listen to UDP),
    and log in to some router that is logging syslog messages to the syslog server used by Archivist.
    Then you must enter router configuration mode, and add some line to config 
-   (ie. snmp-server chassis-id <somestring>  - if you don't use this for something in your network ),
+   (ie. snmp-server chassis-id <somestring>  - if you don't use this for something in your network),
    exit configuration mode, and observe Archivist log for syslog-triggered config download event logs.
- 
- 
+
+
 4. SVN MIRRORING
 
 I've made the decision that Archivist will not be able to commit to many repositories. Instead - you can

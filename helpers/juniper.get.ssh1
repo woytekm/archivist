@@ -7,7 +7,7 @@
 set timeout 15
 
 log_user 1
-spawn ssh -l [lindex $argv 1] [lindex $argv 0]
+spawn ssh -1 -l [lindex $argv 1] [lindex $argv 0]
 
 expect {
  eof

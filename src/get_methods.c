@@ -57,7 +57,7 @@ int a_get_from_device
 int a_get_using_rancid
 (char *device_name, char *device_type)
 /*
-* get device config using Really Awesome Cisco confIg Differ.
+* get device config using Really Awesome Cisco confIg Differ frontend (rancid-fe)
 * rancid uses .cloginrc as a device credentials storage, so our AuthSets defined in config file 
 * have no efect here - user must have valid .cloginrc for this method to work.
 */
@@ -65,19 +65,20 @@ int a_get_using_rancid
  
    struct stat outfile;
    char rancid_command[MAXPATH];
-   char rancid_hostname[MAXPATH];
+   char rancid_filename[MAXPATH];
 
    /* build filenames and command strings */
-   snprintf(rancid_hostname,MAXPATH,"%s.new",device_name);
-   snprintf(rancid_command,MAXPATH,"%s %s %s",G_config_info.rancid_exec_path,device_name,device_type);
+   snprintf(rancid_filename,MAXPATH,"%s.new",device_name);
+   snprintf(rancid_command,MAXPATH,"%s %s:%s",G_config_info.rancid_exec_path,device_name,device_type);
 
-   remove(rancid_hostname); /* try to remove the file */
+   remove(rancid_filename); /* try to remove the file */
 
-   a_debug_info2(DEBUGLVL5,"a_get_using_rancid: executing rancid %s %s ...",device_name,device_type);
+   a_debug_info2(DEBUGLVL5,"a_get_using_rancid: executing rancid %s %s:%s...",
+                 G_config_info.rancid_exec_path, device_name, device_type);
    a_our_system(rancid_command);
    a_debug_info2(DEBUGLVL5,"a_get_using_rancid: rancid finished...");
 
-   if(stat(rancid_hostname,&outfile) == -1)
+   if(stat(rancid_filename,&outfile) == -1)
     {
      a_logmsg("FATAL: %s: rancid failed!",device_name); 
      return -1;

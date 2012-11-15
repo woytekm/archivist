@@ -1176,5 +1176,22 @@ int a_check_and_parse_cmds(int socket)
 }
 
 
+void a_redirect_IO(void)
+ {
+   int stderr_orig_fd, stderr_new_fd;
+   int stdout_orig_fd, stdout_new_fd;
+
+   stderr_orig_fd = dup(STDERR_FILENO);
+   stderr_new_fd = open("/dev/null", O_WRONLY);
+   dup2(stderr_new_fd,STDERR_FILENO);
+   close(stderr_new_fd);
+
+   stdout_orig_fd = dup(STDOUT_FILENO);
+   stdout_new_fd = open("/dev/null", O_WRONLY);
+   dup2(stdout_new_fd,STDOUT_FILENO);
+   close(stdout_new_fd);
+
+ }
+
 
 /* end of misc.c */

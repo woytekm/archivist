@@ -7,32 +7,32 @@
 set timeout 15
 
 log_user 0
-spawn telnet [lindex $argv 0]
+spawn ssh -2 -l [lindex $argv 1] [lindex $argv 0]
 
 expect {
-     "ame:"
-      {
-       send "[lindex $argv 1]\r"
-       expect "ssword:"
-       send "[lindex $argv 2]\r"
-      }
-     "ssword:"
-      {
-       send "[lindex $argv 2]\r"
-      }
-     default
-      {
-       exit 1
-      }
-     timeout
-      {
-       exit 1
-      }
-     eof
-      {
-       exit 1
-      }
-   }
+  eof
+  {
+   exit 1
+  }
+ "ssword:"
+  {
+   send "[lindex $argv 2]\r"
+  }
+ "yes/no"
+  {
+   send "yes\r"
+   expect "ssword:"
+   send "[lindex $argv 2]\r"
+  }
+  default
+  {
+   exit 1
+  }
+ timeout
+  {
+   exit 1
+  }
+ }
 
 expect {
     ">"
@@ -53,26 +53,19 @@ expect {
       }
 
     }
-
-    "(enable)"
+    "enable"
     {
      send "\r"
     }
-
-    timeout
-    {
-     exit
-    }
-
  }
 
-expect "(enable)"
+expect "enable"
 send "set length 0\r"
-expect "(enable)"
+expect "#"
 log_file -a -noappend [lindex $argv 0].new
 set timeout 30
-send "show config all\r"
-expect "(enable)"
+send "show conf all\r"
+expect "enable"
 log_file
 send "exit\r"
 expect "host."

@@ -22,6 +22,14 @@ expect {
     {
      send "[lindex $argv 2]\r"
     }
+ eof
+  {
+   exit 1
+  }
+ timeout
+  {
+   exit 1
+  }
  }
 
 expect {

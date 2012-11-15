@@ -33,8 +33,8 @@ TerminalArchivingMethod internal
 # Location of helper expect scripts - required if you want to use internal method for config pull
 InternalScripts /usr/local/share/archivist/helpers/
 
-# Rancid exec path. Rancid must have a valid .cloginrc
-RancidExecPath /usr/local/rancid/bin/rancid
+# Rancid frontend (rancid-fe) exec path. Rancid must have a valid .cloginrc
+RancidExecPath /usr/local/rancid/bin/rancid-fe
 
 # Path to expect binary
 ExpectExecPath /usr/bin/expect
