@@ -1,0 +1,146 @@
+#
+# Archivist internal expect script
+#
+# mlx.get.ssh - method for getting configuration by SSH from a Brocade MLX/Foundry routers
+#
+
+set timeout 15
+
+log_user 0
+spawn ssh -l [lindex $argv 1] [lindex $argv 0]
+
+expect {
+ eof
+  {
+   exit 1
+  }
+ "ssword:"
+  {
+   send "[lindex $argv 2]\r"
+  }
+ "yes/no"
+  {
+   send "yes\r"
+   expect "ssword:"
+   send "[lindex $argv 2]\r"
+  }
+ default
+  {
+   exit 1
+  }
+ timeout
+  {
+   exit 1
+  }
+ }
+
+expect {
+    ">"
+    {
+     send "en\r"
+
+     expect {
+      "ssword:"
+       {
+        send "[lindex $argv 3]\r"
+       }
+      "ame:"
+       {
+        send "[lindex $argv 1]\r"
+        expect "ssword:"
+        send "[lindex $argv 3]\r"
+       }
+      }
+
+    }
+
+    timeout
+    {
+     exit
+    }
+
+    "uthenticaion failed"
+    {
+     exit
+    }
+
+    "#"
+    {
+     send "\r"
+    }
+
+ }
+
+expect {
+
+      "#"
+        {
+         send "\r"
+        }
+
+      "uthentication failed"
+        {
+         exit
+        }
+
+      "ssword:"
+        {
+         exit
+        }
+
+      timeout
+        {
+         exit
+        }  
+  }
+
+expect {
+          "ame:"
+          {
+           exit
+          }
+
+          "ssword:"
+          {
+           exit
+          }
+         "#"
+          {
+           send "\r"
+           expect "#"
+          }
+     }
+
+
+send "term length 0\r"
+
+expect {
+          "ame:"
+          {
+           exit
+          }
+
+          "ssword:"
+          {
+           exit
+          }
+         "#"
+          {
+           send "\r"
+           expect "#"
+          }
+     }
+
+
+log_file -a -noappend [lindex $argv 0].new
+set timeout 30
+send "write term\r"
+#for some reason simple regex [^#]+#$ sometimes doesn't match here :(
+#so here goes "reverse" version (everything but a hash).
+expect -re {[\w\-_!$%&*()+=|:;"'@{}<>\/?.\[\]]+#$}
+log_file
+send "exit\r"
+send "exit\r"
+expect "host."
+
+
