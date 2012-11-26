@@ -10,100 +10,65 @@ log_user 1
 spawn ssh -1 -l [lindex $argv 1] [lindex $argv 0]
 
 expect {
- eof
-  {
-   exit 1
-  }
- "ssword:"
-  {
-   send "[lindex $argv 2]\r"
-  }
+ eof {exit}
+ timeout {exit}
+ "ssword:" {send "[lindex $argv 2]\r"}
  "yes/no"
   {
    send "yes\r"
    expect "ssword:"
    send "[lindex $argv 2]\r"
   }
- default
-  {
-   exit 1
-  }
- timeout
-  {
-   exit 1
-  }
  }
 
 expect {
-   "%"
-    {
-     send "cli\r"
+  eof {exit}
+  timeout {exit}
+  "%"
+   {
+    send "cli\r"
+    expect {
+      ">" {send "\r"}
+      timeout {exit}
+     }
+   }
+  ">" {send "\r"}
+ }
 
-     expect {
-      ">"
-       {
-        send "\r"
-       }
-     timeout
-       {
-        exit
-       }
-      }
+#if we are logged in now, we should be able to catch prompt:
+set prompt "$expect_out(buffer)"
+set prompt [string trim $prompt "\r"]
+set prompt [string trim $prompt "\n"]
+set prompt [string trim $prompt]
 
-    }
- 
-   ">"
-    {
-     send "\r"
-    }
-
-   timeout
-    {
-     exit
-    }
-  }
-
-expect ">"
+expect $prompt
 send "set cli screen-length 0\r"
 
-expect ">"
+expect $prompt
 
 #check if we are _really_ logged in:
 
 send "show version\r"
 
 expect {
-          timeout
-           {
-            exit
-           }
+  timeout {exit}
+  "JUNOS" {send "\r"}
+ }
 
-         "JUNOS"
-           {
-            expect ">"
-           }
-
-       }
-
+expect $prompt
 log_file -a -noappend [lindex $argv 0].new
 set timeout 30
 send "show configuration\r"
-expect -re {[\w\-_!$%&*()+=|:;"'@{}<>\/?.\[\]]+>\s$}
+expect $prompt
 log_file
 send "exit\r"
 
 expect {
-
   "%"
    {
     send "exit\r"
     expect "host."
    }
-  
-  "host."
-   {
-    exit
-   }
-
+  "host." {exit}
  }
 

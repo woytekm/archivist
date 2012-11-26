@@ -10,207 +10,91 @@ log_user 0
 spawn telnet [lindex $argv 0]
 
 expect {
-
   "ame:"
     {
      send "[lindex $argv 1]\r"
      expect "ssword:"
      send "[lindex $argv 2]\r"
     }
-
-  "ssword:"
-    {
-     send "[lindex $argv 2]\r"
-    }
- eof
-  {
-   exit 1
-  }
- timeout
-  {
-   exit 1
-  }
+  "ssword:" {send "[lindex $argv 2]\r"}
+   eof {exit 1}
+   timeout {exit 1}
  }
 
 expect {
-    ">"
-    {
-
-     send "enable\r"
-
-     expect {
-      "ssword:"
-       {
-        send "[lindex $argv 3]\r"
-       }
-      "ame:"
-       {
-        send "[lindex $argv 1]\r"
-
+   ">"
+   {
+    send "enable\r"
+    expect {
+      "ssword:" {send "[lindex $argv 3]\r"}
+      "ame:" {send "[lindex $argv 1]\r"}
         expect {
-
-          "ssword:"
-           {
-            send "[lindex $argv 3]\r"
-           }
-
-          "ame:"
-           {
-            exit
-           }
-
+          "ssword:" {send "[lindex $argv 3]\r"}
+          "ame:" {exit}
          }
-
-
-       }
+        }
       }
-
-    }
-
-    "failed"
-    {
-     exit
-    }
-
-    "ssword:"
-    {
-     exit
-    }
-
-    "ame:"
-    { 
-     exit
-    }
-
-    timeout
-    {
-     exit
-    }
-
-    "#"
-    {
-     send "\r"
-    }
-
+   "failed" {exit}
+   "ssword:" {exit}
+   "ame:" {exit}
+   timeout {exit}
  }
+
+send "\r"
 
 expect { 
-
-   "failed"
-     {
-      exit
-     }
-
-   "ame:"
-     {
-      exit
-     }
-
-   "ssword:"
-     {
-      exit
-     }
-
-   timeout
-     {
-      exit
-     }
-
-   "#"
-     {
-      send "\r"
-     }
-
-
+   "failed" {exit}
+   "ame:" {exit}
+   "ssword:" {exit}
+   timeout {exit}
+   "#" {send "\r"}
  }
 
-expect {
-          "ame:"
-          {
-           exit
-          }
+#if we are logged in now, we should be able to catch prompt:
+set prompt "$expect_out(buffer)"
+set prompt [string trim $prompt "\r"]
+set prompt [string trim $prompt "\n"]
+set prompt [string trim $prompt]
 
-          "ssword:"
-          {
-           exit
-          }
-
-          "failed"
-          {
-           exit
-          }
-
-         "#"
-          {
-           send "\r"
-           expect "#"
-          }
-     }
+expect $prompt
 
 send "term length 0\r"
 send "terminal pager 0\r"
 
 expect {
- 
-          "ame:"
-          {
-           exit
-          }
+   "ame:" {exit}
+   "ssword:" {exit}
+   "failed" {exit}
+   $prompt {send "show version\r"}
+  }
 
-          "ssword:"
-          {
-           exit
-          }
-
-          "failed"
-          {
-           exit
-          }
-
-         "#"
-          {
-           send "\r"
-           expect "#"
-          }
-       }
-
-
-#check if we are _really_ logged in:
-
-send "show version\r"
-
+#now check if we are _really_ logged in, and can execute commands:
 expect {
-          timeout
-           {
-            exit
-           }
+   timeout {exit}
+   "IOS" {send "\r"}
+   "Cisco" {send "\r"}
+   "FWSM" {send "\r"}
+  }
 
-         "IOS"
-           {
-            expect "#"
-           }
-
-         "Cisco"
-           {
-            expect "#"
-           }
-
-         "FWSM"
-           {
-            expect "#"
-           }
-
-       }
+expect $prompt
 
 send "\r"
-expect "#"
+expect $prompt
 
 log_file -a -noappend [lindex $argv 0].new
 set timeout 30
 send "write term\r"
-#for some reason simple regex [^#]+#$ sometimes doesn't match here :(
-#so here goes "reverse" version (everything but a hash).
-expect -re {[\w\-_!$%&*()+=|:;"'@{}<>\/?.\[\]]+#$}
+
+expect {
+  eof {exit}
+  timeout {exit}
+  "ssword:" {exit}
+  "failed" {exit}
+  $prompt {send "\r"}
+}
+
+send "\r"
+expect $prompt
 log_file
 send "exit\r"
 expect "host."
