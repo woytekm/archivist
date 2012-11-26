@@ -1,6 +1,6 @@
 # Archivist internal expect script
 #
-# cisco.get.telnet - method for getting configuration from a Cisco IOS device
+# cisco.get.ssh - method for getting configuration from a Cisco IOS device
 #
 
 set timeout 15

@@ -1,7 +1,7 @@
 #
 # Archivist internal expect script
 #
-# junos.get.ssh - method for getting configuration by SSH from Juniper JUNOS device
+# juniper.get.ssh - method for getting configuration by SSH from Juniper JUNOS device
 #
 
 set timeout 15
