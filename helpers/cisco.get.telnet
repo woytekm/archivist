@@ -27,13 +27,15 @@ expect {
     send "enable\r"
     expect {
       "ssword:" {send "[lindex $argv 3]\r"}
-      "ame:" {send "[lindex $argv 1]\r"}
-        expect {
-          "ssword:" {send "[lindex $argv 3]\r"}
-          "ame:" {exit}
-         }
+      "ame:" {
+         send "[lindex $argv 1]\r"
+         expect {
+            "ssword:" {send "[lindex $argv 3]\r"}
+            "ame:" {exit}
+         }}
         }
       }
+   "#" {}
    "failed" {exit}
    "ssword:" {exit}
    "ame:" {exit}

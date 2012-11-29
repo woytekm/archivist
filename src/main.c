@@ -185,10 +185,9 @@ main
    if(G_config_info.open_command_socket)
     G_command_socket = a_command_socket_setup();
 
-   a_redirect_IO();
-
    if(G_current_debug_level == 0) /* if we are debugging - stay on the terminal - don't fork. */
     {
+     a_redirect_IO();
      pid = fork();                /* we aren't debugging - fork */
        if (pid < 0)
         {

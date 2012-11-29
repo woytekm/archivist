@@ -204,13 +204,13 @@ int a_get_using_expect
   auth_set_t *device_auth_set;
   struct stat outfile,helper_script;
   char script_path[MAXPATH];
-  char command[MAXPATH];
+  char exp_command[MAXPATH];
   char result_file[MAXPATH];
   int system_result = 0;
 
 
   /* build a command string for expect get script */
-  snprintf(script_path,MAXPATH,"%s/%s.get.%s",G_config_info.script_dir,device_type,arch_method);
+   snprintf(script_path,MAXPATH,"%s/%s.get.%s",G_config_info.script_dir,device_type,arch_method);
 
   if((device_auth_set = a_auth_set_search(G_auth_set_list,auth_set)) == NULL)
    {
@@ -219,14 +219,14 @@ int a_get_using_expect
     return -1;
    }
 
-  snprintf(command,MAXPATH,"%s %s %s %s %s ",
+  snprintf(exp_command,MAXPATH,"%s %s %s %s %s ",
            G_config_info.expect_exec_path,script_path,device_name,
            device_auth_set->login,device_auth_set->password1);
 
   if(device_auth_set->password2 != NULL)
-   strcat(command,device_auth_set->password2);
+   strcat(exp_command,device_auth_set->password2);
   else 
-   strcat(command,device_auth_set->password1);
+   strcat(exp_command,device_auth_set->password1);
 
   snprintf(result_file,MAXPATH,"%s.new",device_name);
 
@@ -242,7 +242,7 @@ int a_get_using_expect
     return -1;
    }
 
-  system_result = a_our_system(command); 
+  system_result = a_our_system(exp_command); 
 
   if((system_result >> 8) > 0)
    { 

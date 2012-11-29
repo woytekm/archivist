@@ -41,6 +41,8 @@
 #define DEFAULT_CONF_CMDSOCK "/tmp/archivist.sock"
 #define DEFAULT_CONF_LISTEN_CMDSOCK YES
 
+#define DEBUG_EXPECT 1
+
 #ifdef USE_MYSQL
 
 #define ARCHIVIST_MYSQL_USER "root"
