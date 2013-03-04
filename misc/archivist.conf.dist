@@ -92,7 +92,7 @@ AuthSet set02 write none
 # format: ConfigRegexp [POSIX regular expression] [string preceding username in syslog message]
 #
 
-#  cisco:
+#  cisco IOS:
 ConfigRegexp SYS-5-CONFIG_I by
 
 #  foundry/brocade MLX:
@@ -100,6 +100,9 @@ ConfigRegexp startup-config[[:space:]]was by
 
 # juniper JunOS
 ConfigRegexp UI_DBASE_LOGOUT_EVENT User
+
+# cisco NX-OS:
+ConfigRegexp VSHD-5-VSHD_SYSLOG_CONFIG_I by
 
 #
 # config end
