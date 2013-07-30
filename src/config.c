@@ -21,18 +21,18 @@
 *
 */
 
+#include "archivist_config.h"
+#include "defs.h"
+#include "scheduler.h"
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
 #include <string.h>
 
-#include "archivist_config.h"
-#include "defs.h"
-#include "scheduler.h"
-
 
 void a_load_config_defaults
-(struct config_info_t *conf_struct)
+(config_info_t *conf_struct)
 /*
 * load config defaults from config.h
 */
@@ -85,9 +85,8 @@ void a_load_config_defaults
 
 
 
-
-struct auth_set_t *a_auth_set_add
-(struct auth_set_t *prev, char *data)
+auth_set_t *a_auth_set_add
+(auth_set_t *prev, char *data)
 /*
 * add an entry to auth set dynamic list
 */
@@ -140,7 +139,7 @@ struct auth_set_t *a_auth_set_add
 
  workptr->prev = prev;
 
- return (struct auth_set_t *)workptr;
+ return (auth_set_t *)workptr;
 
  malloc_fail:
   a_debug_info2(DEBUGLVL3,"a_auth_set_add: malloc failed!");
@@ -150,8 +149,8 @@ struct auth_set_t *a_auth_set_add
 }
 
 
-struct config_regexp_t *a_config_regexp_add
-(struct config_regexp_t *prev, char *data)
+config_regexp_t *a_config_regexp_add
+(config_regexp_t *prev, char *data)
 /*
 * add an entry to global config regexp list
 */
@@ -187,7 +186,7 @@ struct config_regexp_t *a_config_regexp_add
 
   workptr->username_field_token);
 
-  return (struct config_regexp_t *)workptr;
+  return (config_regexp_t *)workptr;
 
   malloc_fail:
    a_debug_info2(DEBUGLVL3,"a_config_regexp_add: malloc failed!");
@@ -196,8 +195,8 @@ struct config_regexp_t *a_config_regexp_add
 
 }
 
-struct router_db_entry_t *a_router_db_list_add
-(struct router_db_entry_t *prev, char *data)
+router_db_entry_t *a_router_db_list_add
+(router_db_entry_t *prev, char *data)
 /*
 * add an entry to router DB dynamic list (or) just convert a text line to a router_db_entry_t
 */
@@ -253,7 +252,7 @@ struct router_db_entry_t *a_router_db_list_add
                 workptr->group,workptr->hostname,workptr->hosttype,workptr->authset,workptr->arch_method);
   #endif
 
-  return (struct router_db_entry_t *)workptr;
+  return (router_db_entry_t *)workptr;
 
   malloc_fail:
    a_debug_info2(DEBUGLVL3,"a_router_db_list_add: malloc failed!");
@@ -264,7 +263,7 @@ struct router_db_entry_t *a_router_db_list_add
 
 
 void a_load_and_parse_config_info
-(char *config_filename, struct config_info_t *conf_struct)
+(char *config_filename, config_info_t *conf_struct)
 /*
 *
 * parse config table and load config values into appropriate structures
@@ -1013,7 +1012,7 @@ int a_is_archived_now
 
    a_debug_info2(DEBUGLVL5,"a_is_archived_now: device %s not found on the linked-list!\n",hostname);
 
-   return NULL; /* return null as hostname was not found in device database */
+   return 0; /* return null as hostname was not found in device database */
 #else
    MYSQL_RES *raw_sql_res;
    MYSQL_ROW sql_res;
@@ -1030,7 +1029,7 @@ int a_is_archived_now
     {
      a_debug_info2(DEBUGLVL3,"a_is_archived_now: cannot exec SQL query (%s) !",sql_query_string);
      free(sql_query_string);
-     return NULL;
+     return 0;
     }
 
    free(sql_query_string);
@@ -1071,7 +1070,7 @@ int a_set_archived
        }
      tmp_pointer = tmp_pointer->prev;
     }
-   return NULL; /* return null as hostname was not found in device database */
+   return 0; /* return null as hostname was not found in device database */
 #else
    char *sql_query_string;
    int retval;
@@ -1089,7 +1088,7 @@ int a_set_archived
    else
     {
      a_debug_info2(DEBUGLVL3,"a_set_archived: SQL update failed (%s) !",sql_query_string);
-     return NULL;
+     return 0;
     }
 #endif
    
@@ -1120,7 +1119,7 @@ void a_router_db_free
 
 #endif
 
-struct router_db_entry_t *a_load_router_db
+router_db_entry_t *a_load_router_db
 (char *filename)
 /*
 * load router DB from a rancid-style file 
@@ -1128,7 +1127,7 @@ struct router_db_entry_t *a_load_router_db
 {
 #ifndef USE_MYSQL
 
-  struct router_db_entry_t *router_db_idx=NULL; /* initialize first entry with null */
+  router_db_entry_t *router_db_idx=NULL; /* initialize first entry with null */
   char buf[CONFIG_MAX_LINELEN];
   int counter = 0;
   FILE *fdes;
@@ -1159,7 +1158,7 @@ struct router_db_entry_t *a_load_router_db
    else
      a_debug_info2(DEBUGLVL5,"a_load_router_db: %d entries loaded from router.db",counter);
 
-   return (struct router_db_entry_t *)router_db_idx;
+   return (router_db_entry_t *)router_db_idx;
 
 #else
 

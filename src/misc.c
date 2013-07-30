@@ -20,13 +20,15 @@
 *    misc.c - miscellaneous procedures 
 */
 
+#include "defs.h"
+#include "archivist_config.h"
+
 #include <../config.h>
 
 #include <sys/types.h>
 #include <sys/stat.h>  
 #include <dirent.h>
 #include <stdarg.h>
-#include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <ctype.h>
@@ -76,9 +78,6 @@
 
 #include <sys/syslog.h>
 #include <regex.h>
-
-#include "defs.h"
-#include "archivist_config.h"
 
 
 void a_debug_info2
@@ -168,7 +167,7 @@ void a_logmsg
 
     gettimeofday(&tv, &tz);
     localtime_r(&tv.tv_sec,&tm);
-    asctime_r(&tm,&timestr);
+    asctime_r(&tm,timestr);
     timestr[strlen(timestr)-1] = 0x0;   /* get rid of newline at the end of asctime result */
 
     total_msg_len = strlen(timestr) + strlen(fmt) + 10;
@@ -307,11 +306,11 @@ void a_cleanup_and_exit
 
    if(G_logfile_handle != NULL)
     fclose(G_logfile_handle);
-   if(G_syslog_file_handle != NULL)
+   if(G_syslog_file_handle != 0)
     close(G_syslog_file_handle);
-   if(G_command_socket != NULL)
+   if(G_command_socket != 0)
     close(G_command_socket);
-  if(G_syslog_socket != NULL)
+   if(G_syslog_socket != 0)
     close(G_syslog_socket);
 
 #ifdef USE_MYSQL
@@ -565,7 +564,7 @@ void a_init_globals
 */
 {
    G_logfile_handle = NULL;
-   G_syslog_file_handle = NULL;
+   G_syslog_file_handle = 0;
    G_active_archiver_threads = 0;
    G_active_bulk_archiver_threads = 0;
    G_syslog_file_size = 0;
@@ -766,7 +765,7 @@ void a_disp_thread_stacksize
 *
 */
 {
-   int thread_stacksize;
+   size_t thread_stacksize;
    pthread_attr_t thread_attr;
 
    pthread_attr_init(&thread_attr);
@@ -874,7 +873,7 @@ int a_add_changelog_entry
 
    t = time(0);
    localtime_r(&t,&tstruct);
-   asctime_r(&tstruct,&asctime_str);
+   asctime_r(&tstruct,asctime_str);
 
    snprintf(header,512,
             "\n====== following config changes made by %s at: %s\n",configured_by,asctime_str);
@@ -912,7 +911,7 @@ int a_add_changelog_entry
 *
 */
 
-const char *a_mystristr(const char *haystack, const char *needle)
+char *a_mystristr(char *haystack, char *needle)
 {
  if ( !*needle )
   {
@@ -1037,7 +1036,11 @@ void a_dump_memstats_linux(void)
 
 
  if (fd) {
-    fscanf(fd, "%u %u %u %u %u %u", &size, &resident, &share, &text, &lib, &data);
+    if(fscanf(fd, "%u %u %u %u %u %u", &size, &resident, &share, &text, &lib, &data)==EOF)
+     {
+      a_logmsg("WARNING: cannot get memstats from /proc/self/statm");
+      return;
+     }
   }
 
  fclose(fd);

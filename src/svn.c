@@ -19,7 +19,9 @@
 *    svn.c - SVN access procedures
 */
 
-#include <assert.h>
+#include "defs.h"
+#include "archivist_config.h"
+
 #include <stdlib.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -29,9 +31,7 @@
 #include "svn_config.h"
 #include "svn_fs.h"
 #include "svn_error.h"
-
-#include "defs.h"
-#include "archivist_config.h"
+#include "svn_path.h"
 
 #define APR_LOCALE_CHARSET   (const char *)1 
 
@@ -276,9 +276,9 @@ int a_svn_diff
     array = apr_array_make (apr_pool, 0, sizeof (const char *));
 
     svn_err = svn_client_diff4(array,
-                             (char *)svn_path_canonicalize(temp_svn_path,apr_pool),
+                             svn_path_canonicalize(temp_svn_path,apr_pool),
                              &revision1,
-                             (char *)svn_path_canonicalize(full_device_svn_path,apr_pool),
+                             svn_path_canonicalize(full_device_svn_path,apr_pool),
                              &revision2,
                              NULL,
                              svn_depth_empty,

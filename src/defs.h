@@ -20,6 +20,8 @@
 *    defs.h - various global definitions
 */
 
+#include "Python.h"
+
 #include <pthread.h>
 
 #ifdef USE_MYSQL
@@ -33,8 +35,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <svn_pools.h>
-
-#include "Python.h"
 
 #define DEBUGLVL1 1
 #define DEBUGLVL2 2
@@ -80,7 +80,11 @@
 #define REGCOMP_CASE 1
 #define REGCOMP_NOCASE 0
 
+#ifndef nil
+
 #define nil ((void*)0)
+
+#endif
 
 /* global variables needed for thread operation and debugging: */
 
@@ -98,7 +102,7 @@ int G_active_bulk_archiver_threads;
 char G_debug_msg[16384];
 
 FILE *G_logfile_handle;
-FILE *G_syslog_file_handle;
+int G_syslog_file_handle;
 
 int G_syslog_socket;
 int G_command_socket;
@@ -124,12 +128,20 @@ MYSQL *G_db_connection;
 /* prototypes of pthread and signal callable routines: */
 
 extern void a_signal_cleanup(void);
-
-extern void a_archive_single(void *arg);
-
-extern int a_archive_bulk(void *arg);
-
+extern void *a_archive_single(void *arg);
+extern void *a_archive_bulk(void *arg);
 extern void a_apr_reinit(void);
+
+/* other prototypes */
+
+int a_syslog_socket_setup(void);
+int a_syslog_fstream_setup(void);
+char *a_trimwhitespace(char *str);
+char *a_mystristr(char *haystack, char *needle);
+char *a_config_regexp_match(char *syslog_buffer);
+void a_dump_memstats_solaris(void);
+void a_dump_memstats_freebsd(void);
+void a_dump_memstats_linux(void);
 
 /* define SUN_LEN for the systems which don't have it */
 

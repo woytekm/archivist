@@ -43,4 +43,6 @@ time_t G_next;     /* current time. */
 #define bit_clr(map, n)         ((void) ((map)[(n) >> 3] &= ~(1 << ((n) & 7))))
 #define bit_isset(map, n)       (!!((map)[(n) >> 3] & (1 << ((n) & 7))))
 
+cronjob_t *a_job_parse(char *job_data);
+
 

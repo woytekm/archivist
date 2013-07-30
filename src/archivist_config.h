@@ -69,7 +69,7 @@ static char G_svn_tmp_prefix[20]=".svn_tmp";   /* prefix for name of svn tmp dir
 
 /* structure holding archivist configuration data */
 
-struct config_info_t{ int  instance_id;		/* Archivist instance ID  */
+typedef struct      { int  instance_id;		/* Archivist instance ID  */
                       char working_dir[MAXPATH];    /* where should we store temp files/directories? */
                       char locks_dir[MAXPATH];      /* where should we create lock files? */
                       char logging;             /* should we enable logging? */
@@ -99,42 +99,41 @@ struct config_info_t{ int  instance_id;		/* Archivist instance ID  */
 		      char mysql_password[255];	/* mysql connection password */
 		      char mysql_dbname[255];	/* mysql database name */
 #endif
-                  };
+                  } config_info_t;
 
 
 /* structure holding one line of data from router.db - information about single device */
 
-typedef struct{ char *group;
+typedef struct { char *group;
                 char *hostname;
                 char *hosttype;
                 char *authset;
                 char *arch_method;
                 int archived_now;
                 void *prev;
-               }router_db_entry_t;
+               } router_db_entry_t;
 
 /* authentication set consists of login name and a two passwords */
 
-typedef struct{ char *set_name;
+typedef struct { char *set_name;
 		char *login;
 		char *password1;
 		char *password2;
                 void *prev;
-	      }auth_set_t;
-
+	      } auth_set_t;
 
 /* config regexp consists of config regexp string and string preceding username */
 
-typedef struct{ char *config_regexp_string;
+typedef struct { char *config_regexp_string;
                 char *username_field_token;
                 void *prev;
-              }config_regexp_t;
+              } config_regexp_t;
 
 /* structure for loading device config into a dynamic list */
 
 typedef struct { char *conf_line;
                  struct confline_t *next;
-                }confline_t;
+                } confline_t;
 
 /* structure holding information about a configuration event */
 
@@ -142,18 +141,21 @@ typedef struct { char configured_from[255];
                  char configured_by[255];
                  char configured_on[255];
                  char device_id[255];
-               }config_event_info_t;
+               } config_event_info_t;
 
 /* declarations of public data structures */
 
-struct config_info_t G_config_info;
+config_info_t G_config_info;
+router_db_entry_t *G_router_db;
+auth_set_t *G_auth_set_list;
+config_regexp_t *G_config_regexp_list;
 
-struct router_db_entry_t *G_router_db;
+/* prototypes of routines wchich use above structs */
 
-struct auth_set_t *G_auth_set_list;
-
-struct config_regexp_t *G_config_regexp_list;
-
+router_db_entry_t *a_load_router_db(char *filename);
+router_db_entry_t *a_router_db_search(router_db_entry_t *router_db_idx, char *hostname);
+auth_set_t *a_auth_set_add(auth_set_t *prev, char *data);
+config_regexp_t *a_config_regexp_add(config_regexp_t *prev, char *data);
+auth_set_t *a_auth_set_search(auth_set_t *auth_set_list_idx, char *setname);
 
 /* end of archivist_config.h */
-

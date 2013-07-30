@@ -20,8 +20,10 @@
  *    taillog.c - syslog file follower procedures
  */
 
+#include "defs.h"
+#include "archivist_config.h"
+
 #include <stdarg.h>
-#include <assert.h>
 #include <errno.h>
 #include <sys/types.h>
 #include <sys/types.h>
@@ -35,10 +37,8 @@
 #include <sys/param.h>
 #include <sys/wait.h>
 
-#include "defs.h"
-#include "archivist_config.h"
 
-FILE *a_syslog_fstream_setup
+int a_syslog_fstream_setup
 (void)
 /*
 * get file descriptor of the tailed syslog file ready
@@ -46,7 +46,7 @@ FILE *a_syslog_fstream_setup
 */
 {
   int fsize;
-  FILE *fdesc;
+  int fdesc;
 
   fdesc = open(G_config_info.syslog_filename,O_RDONLY);
 

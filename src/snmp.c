@@ -20,14 +20,14 @@
 *    snmp.c - SNMP config download procedures
 */
 
+#include "defs.h"
+#include "archivist_config.h"
+
 #include <net-snmp/net-snmp-config.h>
 #include <net-snmp/net-snmp-includes.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <sys/stat.h>
-
-#include "defs.h"
-#include "archivist_config.h"
 
 
 int a_get_using_snmp

@@ -19,7 +19,9 @@
  *    arch.c - multithreaded procedures for device config archivization 
  */
 
-#include <pthread.h>
+#include "defs.h"
+#include "archivist_config.h"
+
 #include <netdb.h>
 #include <stdio.h>
 #include <sys/stat.h>
@@ -31,8 +33,6 @@
 #include <svn_fs.h>
 #include <svn_error.h>
 
-#include "defs.h"
-#include "archivist_config.h"
 
 
 int a_sync_device
@@ -306,7 +306,7 @@ int a_sync_device
 }
 
 
-int a_archive_bulk
+void *a_archive_bulk
 (void *arg)
 /*
 *
@@ -317,6 +317,7 @@ int a_archive_bulk
 
   router_db_entry_t *device_entry_pointer; 
   config_event_info_t *confinfo;
+
   int thread_counter = 0;
   unsigned int timer = 0;
 
@@ -332,11 +333,11 @@ int a_archive_bulk
     if(timer > 10) 
      {
       a_logmsg("a_archive_bulk: timeout while waiting for another archiving thread to end. exit.");
-      return -1;
+      pthread_exit(NULL);
      }
 
     if(G_stop_all_processing)
-     return 1;
+     pthread_exit(NULL);
 
    }
 
@@ -417,7 +418,7 @@ int a_archive_bulk
      pthread_attr_setdetachstate(&thread_attr, PTHREAD_CREATE_DETACHED);
      pthread_attr_setstacksize(&thread_attr, stacksize);
      
-     if(pthread_create(&next_thread, &thread_attr, a_archive_single, (void *)confinfo))
+     if(pthread_create(&next_thread, &thread_attr, a_archive_single, (void*)confinfo))
       {
        a_logmsg("bulk archiver thread:fatal! cannot create archiver thread!");
        a_debug_info2(DEBUGLVL5,"a_archive_bulk: cannot create archiver thread for %s (%d)!",
@@ -444,7 +445,7 @@ int a_archive_bulk
 }
 
 
-void a_archive_single
+void *a_archive_single
 (void *arg)
 /*
 *

@@ -19,16 +19,15 @@
 *    get_methods.c - definitions of config download methods
 */
 
+#include "defs.h"
+#include "archivist_config.h"
+
 #include<stdio.h>
 #include<unistd.h>
 #include<stdlib.h>
 #include<fcntl.h>
 #include<sys/stat.h>
 
-#include "Python.h"
-
-#include "defs.h"
-#include "archivist_config.h"
 
 int a_get_from_device
 (char *device_name, char *device_type, char *device_auth_set_name, char *device_arch_method)

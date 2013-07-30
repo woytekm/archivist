@@ -62,9 +62,13 @@
 *    (code adapted from minix 3 cron sources)
 */
 
+#include "archivist_config.h"
+#include "defs.h"
+#include "scheduler.h"
+
+
 #include <sys/types.h>
 #include <stdio.h>
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <signal.h>
@@ -80,9 +84,6 @@
 #include <sys/wait.h>
 #include <sys/syslog.h>
 
-#include "archivist_config.h"
-#include "defs.h"
-#include "scheduler.h"
 
 
 void a_job_reschedule
@@ -314,7 +315,11 @@ void a_job_reschedule
         if (job->rtime < G_next) G_next= job->rtime;
 }
 
+#ifndef isdigit
+
 #define isdigit(c)      ((unsigned) ((c) - '0') < 10)
+
+#endif
 
 static char *a_get_token
 (char **ptr)
@@ -604,7 +609,7 @@ void a_check_and_run_jobs
    pthread_t scheduled_thread;
 
    if(G_stop_all_processing)
-     return 1;           /* program is in the state of cleanup&exit - just return. */
+     return;           /* program is in the state of cleanup&exit - just return. */
 
    time(&G_now);
 

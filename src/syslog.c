@@ -19,6 +19,9 @@
 *    syslog.c - UDP syslog listener + syslog buffer parsing procedures
 */
 
+#include "defs.h"
+#include "archivist_config.h"
+
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -28,9 +31,6 @@
 #include <fcntl.h>
 #include <netdb.h>
 #include <string.h>
-
-#include "defs.h"
-#include "archivist_config.h"
 
 
 int a_syslog_socket_setup
@@ -115,7 +115,7 @@ int a_check_syslog_stream
        if(received_data_len>0)
         {
          a_debug_info2(DEBUGLVL5,"a_check_syslog_stream: readed %d bytes from network",received_data_len);
-         regexp_test = (char *)a_config_regexp_match(buf); /* pre-filtering of syslog messages */
+         regexp_test = a_config_regexp_match(buf); /* pre-filtering of syslog messages */
 
          if(regexp_test != NULL)
            {
